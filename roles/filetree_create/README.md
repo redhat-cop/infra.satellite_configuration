@@ -1,5 +1,7 @@
 # infra.satellite.filetree_create
 
+THIS IS A TEST COMMENT TO CHECK THE CI
+
 The role `infra.satellite.filetree_create` is intended to be used as the first step to begin using the Configuration as Code on Red Hat Satellite, when you already have a running instance of any of them. Obviously, you also could start to write your objects as code from scratch, but the idea behind the creation of that role is to simplify your lives and make that task a little bit easier.
 
 ## Requirements
