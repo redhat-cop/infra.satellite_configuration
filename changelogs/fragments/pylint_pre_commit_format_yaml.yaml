@@ -1,5 +1,0 @@
----
-minor_changes:
-  - Add pylint to pre-commit with a repository ``.pylintrc``; scope black and pylint to ``plugins/`` and ``tests/unit``, and exclude paths such as ``.ansible/`` that are not part of the source tree.
-  - galaxy.yml - expand ``build_ignore`` so development, CI, and test paths are omitted from the collection artifact.
-  - format_yaml - apply pylint-driven code quality updates (no change to module behaviour).

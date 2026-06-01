@@ -1,3 +1,0 @@
----
-bugfixes:
-  - filetree_create - ``satellite_roles.yaml.j2`` emits readable multi-line YAML under Ansible default ``trim_blocks`` (explicit newlines after each permission and after ``search``, ``{%- endfor %}`` / ``{%- endif %}`` to avoid doubled blanks, and a blank line between filter entries).

@@ -1,4 +1,0 @@
----
-bugfixes:
-  - Fix the filetree_create role as the provisioning template's output needs to have the operatingsystem's title instead of it's name to let the dispatch to work properly.
-...

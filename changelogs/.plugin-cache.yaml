@@ -1,20 +1,5 @@
 objects:
-  role:
-    dispatch:
-      name: dispatch
-      description: An Ansible role to call other roles to create objects on Red Hat
-        Satellite
-      version_added: 1.0.0
-    filetree_create:
-      name: filetree_create
-      description: An Ansible Role to create a local file tree of objects existing
-        in Red Hat Satellite
-      version_added: 1.0.0
-    filetree_read:
-      name: filetree_read
-      description: An Ansible Role to read from a local file tree and create objects
-        in Red Hat Satellite
-      version_added: 1.0.0
+  role: {}
 plugins:
   become: {}
   cache: {}
@@ -25,10 +10,15 @@ plugins:
   httpapi: {}
   inventory: {}
   lookup: {}
-  module: {}
+  module:
+    format_yaml:
+      description: Format YAML files with PyYAML (ansible-core dependency only)
+      name: format_yaml
+      namespace: ''
+      version_added: null
   netconf: {}
   shell: {}
   strategy: {}
   test: {}
   vars: {}
-version: 1.0.0
+version: 1.1.0

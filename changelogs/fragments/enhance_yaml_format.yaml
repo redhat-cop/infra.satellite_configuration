@@ -1,5 +1,0 @@
----
-bugfixes:
-  - Replace the format_yaml.py module with the one available from infra.aap_configuration_extended collection.
-  - Fix the output of the format_yaml.py module to correctly format the output (Certificates mainly)
-...

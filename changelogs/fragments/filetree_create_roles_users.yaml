@@ -1,3 +1,0 @@
----
-minor_changes:
-  - filetree_create - export custom roles and users to ``satellite_roles.yaml`` and ``satellite_users.yaml`` using tags ``roles`` and ``users``. Default roles are excluded by configurable name blocklist (thin index lacks ``builtin``) plus filters on full role JSON after ``GET /api/roles/:id``.

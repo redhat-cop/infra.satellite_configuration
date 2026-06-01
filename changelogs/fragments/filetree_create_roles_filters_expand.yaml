@@ -1,3 +1,0 @@
----
-bugfixes:
-  - filetree_create - export role filters with permissions and search by following ``GET /api/filters/:id`` for each stub returned on ``GET /api/roles/:id`` (Foreman embed is thin).

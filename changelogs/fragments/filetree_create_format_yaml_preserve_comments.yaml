@@ -1,6 +1,0 @@
----
-bugfixes:
-  - "filetree_create - keep canonical YAML formatting by passing ``preserve_comments: false`` to ``format_yaml`` (restores full round-trip dump behavior)."
-  - "format_yaml - fix module documentation YAML parsing by avoiding a colon+space sequence inside an inline example."
-  - "filetree_create - restore ``preserve_comments: false`` for ``format_yaml`` so generated YAML is fully canonicalized (block-style lists/dicts) rather than only having indentation adjusted (module default preserves comments)."
-...

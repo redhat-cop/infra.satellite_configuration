@@ -1,5 +1,41 @@
-================================================
+============================================
 infra.satellite\_configuration Release Notes
-================================================
+============================================
 
 .. contents:: Topics
+
+v1.1.0
+======
+
+Minor Changes
+-------------
+
+- Add pylint to pre-commit with a repository ``.pylintrc``; scope black and pylint to ``plugins/`` and ``tests/unit``, and exclude paths such as ``.ansible/`` that are not part of the source tree.
+- Updated the README.md files of each role
+- filetree_create - export custom roles and users to ``satellite_roles.yaml`` and ``satellite_users.yaml`` using tags ``roles`` and ``users``. Default roles are excluded by configurable name blocklist (thin index lacks ``builtin``) plus filters on full role JSON after ``GET /api/roles/:id``.
+- filetree_create - optional ``satellite.template.set_ownership`` (default ``false``) to apply ``owner``/``group`` on templated export files; the playbook only sets ``mode`` on the output directory to avoid ``chown`` errors for local runs.
+- format_yaml - apply pylint-driven code quality updates (no change to module behaviour).
+- galaxy.yml - expand ``build_ignore`` so development, CI, and test paths are omitted from the collection artifact.
+
+Bugfixes
+--------
+
+- Add installation_mediums. This has been added using the cursor skills provided by the PR
+- Fix the clean_fields.j2 template to remove spaces at the end of lines as they were preventing the 'yq -P' to process raw data correctly.
+- Fix the filetree_create role as the provisioning template's output needs to have the operatingsystem's title instead of it's name to let the dispatch to work properly.
+- Fix the output of the format_yaml.py module to correctly format the output (Certificates mainly)
+- Read files when there are files to read
+- Remove extra new lines that was introduced when templating
+- Remove yq from the collection and add a new module to process the yaml files using PyYAML.
+- Replace the format_yaml.py module with the one available from infra.aap_configuration_extended collection.
+- ansible.cfg - use the correct INI key ``collections_path`` (singular) so vendored collections under ``./collections`` are actually loaded; ``collections_paths`` was ignored by Ansible.
+- filetree_create - ``satellite_roles.yaml.j2`` emits readable multi-line YAML under Ansible default ``trim_blocks`` (explicit newlines after each permission and after ``search``, ``{%- endfor %}`` / ``{%- endif %}`` to avoid doubled blanks, and a blank line between filter entries).
+- filetree_create - export role filters with permissions and search by following ``GET /api/filters/:id`` for each stub returned on ``GET /api/roles/:id`` (Foreman embed is thin).
+- filetree_create - keep canonical YAML formatting by passing ``preserve_comments: false`` to ``format_yaml`` (restores full round-trip dump behavior).
+- filetree_create - move ``format_yaml`` steps into ``include_tasks`` so tag-filtered runs (e.g. ``--tags roles,users``) do not require the collection action to be resolvable at parse time.
+- filetree_create - restore ``preserve_comments: false`` for ``format_yaml`` so generated YAML is fully canonicalized (block-style lists/dicts) rather than only having indentation adjusted (module default preserves comments).
+- fixes some bugs and lintering issues.
+- format_yaml - fix module documentation YAML parsing by avoiding a colon+space sequence inside an inline example.
+- remove the prefix "satellite_*" from the tags
+- run_filetree_create playbook - drop ``module_defaults`` for ``redhat.satellite.organization_info`` so the play can be parsed without the Satellite collection installed; role tasks already pass connection parameters explicitly.
+- run_filetree_create playbook - resolve ``filetree_create`` by path next to ``playbooks/`` so the export works from a git checkout without installing the collection into ``collections_paths``.

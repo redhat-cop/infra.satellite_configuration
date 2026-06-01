@@ -1,3 +1,0 @@
----
-bugfixes:
-  - ansible.cfg - use the correct INI key ``collections_path`` (singular) so vendored collections under ``./collections`` are actually loaded; ``collections_paths`` was ignored by Ansible.

@@ -1,5 +1,0 @@
----
-bugfixes:
-  - Read files when there are files to read
-  - remove the prefix "satellite_*" from the tags
-...

@@ -1,4 +1,0 @@
----
-bugfixes:
-  - Fix the clean_fields.j2 template to remove spaces at the end of lines as they were preventing the 'yq -P' to process raw data correctly.
-...

@@ -1,3 +1,0 @@
----
-bugfixes:
-  - filetree_create - move ``format_yaml`` steps into ``include_tasks`` so tag-filtered runs (e.g. ``--tags roles,users``) do not require the collection action to be resolvable at parse time.

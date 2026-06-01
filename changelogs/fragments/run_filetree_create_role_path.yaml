@@ -1,3 +1,0 @@
----
-bugfixes:
-  - run_filetree_create playbook - resolve ``filetree_create`` by path next to ``playbooks/`` so the export works from a git checkout without installing the collection into ``collections_paths``.

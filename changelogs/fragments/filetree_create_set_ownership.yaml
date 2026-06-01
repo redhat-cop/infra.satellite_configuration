@@ -1,3 +1,0 @@
----
-minor_changes:
-  - filetree_create - optional ``satellite.template.set_ownership`` (default ``false``) to apply ``owner``/``group`` on templated export files; the playbook only sets ``mode`` on the output directory to avoid ``chown`` errors for local runs.
