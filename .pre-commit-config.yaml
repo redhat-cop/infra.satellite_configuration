@@ -36,7 +36,7 @@ repos:
         language: python
         additional_dependencies:
           - pytest
-          - ansible-core==2.16.14
+          - ansible-core==2.21.0
           - PyYAML
         pass_filenames: false
         always_run: true
@@ -45,7 +45,7 @@ repos:
         entry: python .github/scripts/check_collection_python.py
         language: python
         additional_dependencies:
-          - ansible-core==2.16.14
+          - ansible-core==2.21.0
           - PyYAML
         pass_filenames: false
         always_run: true
@@ -74,6 +74,6 @@ repos:
         always_run: true
         args: [plugins, tests/unit]
         additional_dependencies:
-          - ansible-core==2.16.14
+          - ansible-core==2.21.0
           - PyYAML
 ...
