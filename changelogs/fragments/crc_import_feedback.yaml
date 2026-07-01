@@ -1,5 +1,0 @@
----
-bugfixes:
-  - README - use absolute URLs for Automation Hub rendering and add a Support section per certified collection template.
-  - playbooks - refactor example playbooks for ansible-lint syntax-check compatibility (remove YAML anchors, use collection FQCN roles).
-  - ansible-lint - remove evaluate-only rule suppressions for fqcn[action] and role-name[path].

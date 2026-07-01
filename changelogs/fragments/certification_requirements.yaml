@@ -1,5 +1,0 @@
----
-bugfixes:
-  - fixed the LICENSE field in the galaxy.yml file so it is showing GPL >= 3 right now
-  - The file .ansible-lint is now ignored when building the release of the collection
-...

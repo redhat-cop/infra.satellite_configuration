@@ -4,6 +4,18 @@ infra.satellite\_configuration Release Notes
 
 .. contents:: Topics
 
+v1.1.3
+======
+
+Bugfixes
+--------
+
+- README - use absolute URLs for Automation Hub rendering and add a Support section per certified collection template.
+- The file .ansible-lint is now ignored when building the release of the collection
+- ansible-lint - remove evaluate-only rule suppressions for fqcn[action] and role-name[path].
+- fixed the LICENSE field in the galaxy.yml file so it is showing GPL >= 3 right now
+- playbooks - refactor example playbooks for ansible-lint syntax-check compatibility (remove YAML anchors, use collection FQCN roles).
+
 v1.1.1
 ======
 
