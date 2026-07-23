@@ -1,5 +1,0 @@
----
-bugfixes:
-  - release automation - create and merge the changelog PR with GITHUB_TOKEN
-    so merge_release no longer fails when GH_WORKFLOW_KEY lacks createPullRequest.
-...

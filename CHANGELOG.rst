@@ -4,6 +4,14 @@ infra.satellite\_configuration Release Notes
 
 .. contents:: Topics
 
+v1.3.1
+======
+
+Bugfixes
+--------
+
+- release automation - create and merge the changelog PR with GITHUB_TOKEN so merge_release no longer fails when GH_WORKFLOW_KEY lacks createPullRequest.
+
 v1.3.0
 ======
 
