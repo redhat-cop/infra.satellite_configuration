@@ -4,6 +4,14 @@ infra.satellite\_configuration Release Notes
 
 .. contents:: Topics
 
+v1.3.2
+======
+
+Bugfixes
+--------
+
+- Completely skip the EE build when releaseing.
+
 v1.3.1
 ======
 

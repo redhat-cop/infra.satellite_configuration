@@ -1,4 +1,0 @@
----
-bugfixes:
-  - Completely skip the EE build when releaseing.
-...
