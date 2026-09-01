@@ -39,7 +39,7 @@ concurrency:
 # for each affected version of ansible-core (for example, `tests/sanity/ignore-2.18.txt`) and add corresponding entries.
 jobs:
   call:
-    uses: ansible-collections/partner-certification-checker/.github/workflows/certification-reusable.yml@f182febf0568baf1151f66549401167fd10b25d2 # v4.0.0
+    uses: ansible-collections/partner-certification-checker/.github/workflows/certification-reusable.yml@f4bf7ba4d3f008b2db8fc6a812fa3f89fdf42c2e # v4.1.0
     # For details on tested ansible-core branches and Python versions,
     # see: https://github.com/ansible-collections/partner-certification-checker#tested-ansible-core-branches-and-python-versions
     # redhat.satellite is only available on Automation Hub.
