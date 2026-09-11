@@ -235,7 +235,7 @@ jobs:
           fetch-depth: 0
 
       - name: Validate changelog
-        uses: ansible/ansible-content-actions/.github/actions/ansible_validate_changelog@c81d405f1de6452c2ba7ddaca919afc65f8fe7ca # main
+        uses: ansible/ansible-content-actions/.github/actions/ansible_validate_changelog@fbf0452809057bf50d9e263f49de13ac789a747c # main
 
   pre-commit:
     needs: [approval-gate, manual-approval]
