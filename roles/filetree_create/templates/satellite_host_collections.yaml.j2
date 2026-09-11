@@ -25,8 +25,5 @@ satellite_host_collections: {{ [] if info_list | length == 0 }}
     {{ __map_item.key }}: {{ __var.map_item_value if (__var.map_item_value | length > 0) else __map_item.value | default('""' if __map_item.key not in __list_items else []) | replace("\\'", "''") }}
 {%     endif %}
 {%-   endfor %}
-    organization: {{ (lookup('ansible.builtin.url', satellite.server_url + '/katello/api/organizations/' + (i.organization_id | string | urlencode),
-                            username=satellite.admin.username, password=satellite.admin.password,
-                            validate_certs=satellite.validate_certs, force_basic_auth='True', split_lines='False') | from_json).name }}
 {% endfor %}
 ...

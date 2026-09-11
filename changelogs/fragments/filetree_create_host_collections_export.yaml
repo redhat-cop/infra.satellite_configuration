@@ -1,0 +1,7 @@
+---
+bugfixes:
+  - filetree_create - fetch host collections per organization and resolve organization
+    names in tasks instead of template-time API lookups, fixing export failures on
+    multi-org Satellite instances.
+
+...

@@ -1,0 +1,40 @@
+---
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+DOCUMENTATION:
+  name: satellite_configuration_reject_locked_items
+  short_description: Drop locked Foreman API objects from a list
+  version_added: 1.4.0
+  description:
+    - Returns the input list without entries whose C(locked) field is truthy.
+    - When I(skip_locked) is C(false), returns the list unchanged.
+    - Used by C(filetree_create) to omit factory templates and media at export.
+  positional: _input
+  options:
+    _input:
+      description: List of Foreman API object dicts from an index response.
+      type: list
+      elements: dict
+      required: true
+    skip_locked:
+      description: When C(false), return the input list unchanged.
+      type: bool
+      default: true
+  author:
+    - infra.satellite_configuration contributors
+
+EXAMPLES: |
+  - name: Export only unlocked provisioning templates
+    ansible.builtin.set_fact:
+      export_list: >-
+        {{
+          provisioning_templates
+          | infra.satellite_configuration.satellite_configuration_reject_locked_items(true)
+        }}
+
+RETURN:
+  _value:
+    description: Input list without locked objects when I(skip_locked) is C(true).
+    type: list
+    elements: dict
+...

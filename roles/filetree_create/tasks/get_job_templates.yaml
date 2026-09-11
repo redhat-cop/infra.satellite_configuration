@@ -10,9 +10,26 @@
     call_type: Job Templates
     api_link: "/api/job_templates?per_page=all"
 
+- name: Job Templates | Resolve locked job template export skip flag
+  ansible.builtin.set_fact:
+    __filetree_create_effective_skip_locked_job_templates: >-
+      {{
+        false
+        if (filetree_create_include_locked_templates | default(false) | bool)
+        else (filetree_create_skip_locked_job_templates | default(true) | bool)
+      }}
+
+- name: Job Templates | Filter locked job templates from export index
+  ansible.builtin.include_tasks: filter_locked_export_index.yaml
+  vars:
+    __filter_locked_source_list: "{{ result_api_response.json.results }}"
+    __filter_locked_skip: "{{ __filetree_create_effective_skip_locked_job_templates }}"
+    __filter_locked_call_type: Job Templates
+    __filter_locked_object_label: job templates
+
 - name: Job Templates | Retain the Job Templates' info
   ansible.builtin.set_fact:
-    __job_templates_list: "{{ result_api_response.json.results }}"
+    __job_templates_list: "{{ __filter_locked_export_list }}"
 
 - name: Job Templates | Get detailed Job Template info
   ansible.builtin.include_tasks: get_job_templates_do_work.yaml
