@@ -2,6 +2,27 @@
 
 Following there's an example of how this collection can be used to export and import Satellite Configuration.
 
+## Integration test: skip locked factory objects at export
+
+Against a live Satellite (default install recommended), verify that locked factory
+provisioning templates, partition tables, and job templates are **not** written to
+the export tree when using default `filetree_create` skip settings:
+
+```console
+export SATELLITE_SERVER_URL="https://satellite.example.com"
+export SATELLITE_USERNAME="admin"
+export SATELLITE_PASSWORD="secret"
+export SATELLITE_VALIDATE_CERTS="true"
+
+ansible-playbook tests/integration/filetree_create_skip_locked_export.yaml \
+  --skip-tags yaml_format
+```
+
+The playbook queries `/api/provisioning_templates`, `/api/ptables`, and
+`/api/job_templates` for locked objects, exports the three object types, and asserts
+that no locked name appears in the generated CaC files (including `Kickstart default`
+and `Preseed default LVM` when present on the server).
+
 ## Export your configuration using the following commands
 
 Define `satellite` or `satellite_source` in your vars file. For round-trip workflows, prefer `satellite_source` (export) and `satellite_target` (import) in the same file — see the collection README.

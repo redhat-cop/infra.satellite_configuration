@@ -14,7 +14,12 @@
     __job_template_detail: "{{ result_api_response.content | from_json }}"
 
 - name: Job Template (Do Work) | Get full Template Input details
-  when: __job_template_detail.template_inputs | default([]) | length > 0
+  when:
+    - not (
+        (__filetree_create_effective_skip_locked_job_templates | default(true) | bool)
+        and (__job_template_detail.locked | default(false) | bool)
+      )
+    - __job_template_detail.template_inputs | default([]) | length > 0
   ansible.builtin.uri:
     method: GET
     url: "{{ satellite.server_url }}/api/templates/{{ __current_job_template.id }}/template_inputs/{{ __current_template_input.id }}"
@@ -31,7 +36,12 @@
   register: __template_inputs_detail
 
 - name: Job Template (Do Work) | Append Job Template to info list
-  when: __job_template_detail is defined
+  when:
+    - __job_template_detail is defined
+    - not (
+        (__filetree_create_effective_skip_locked_job_templates | default(true) | bool)
+        and (__job_template_detail.locked | default(false) | bool)
+      )
   ansible.builtin.set_fact:
     __rs_info_list: >-
       {{

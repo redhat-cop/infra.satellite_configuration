@@ -10,9 +10,26 @@
     call_type: Installation Mediums
     api_link: "/api/media?per_page=all"
 
+- name: Installation Mediums | Resolve locked installation medium export skip flag
+  ansible.builtin.set_fact:
+    __filetree_create_effective_skip_locked_installation_mediums: >-
+      {{
+        false
+        if (filetree_create_include_locked_templates | default(false) | bool)
+        else (filetree_create_skip_locked_installation_mediums | default(true) | bool)
+      }}
+
+- name: Installation Mediums | Filter locked installation media from export index
+  ansible.builtin.include_tasks: filter_locked_export_index.yaml
+  vars:
+    __filter_locked_source_list: "{{ result_api_response.json.results }}"
+    __filter_locked_skip: "{{ __filetree_create_effective_skip_locked_installation_mediums }}"
+    __filter_locked_call_type: Installation Mediums
+    __filter_locked_object_label: installation media
+
 - name: Installation Mediums | Retain the Installation Mediums' info
   ansible.builtin.set_fact:
-    __installation_mediums_list: "{{ result_api_response.json.results }}"
+    __installation_mediums_list: "{{ __filter_locked_export_list }}"
 
 - name: Installation Mediums | Get External Installation Mediums Info
   ansible.builtin.include_tasks: get_installation_mediums_do_work.yaml

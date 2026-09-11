@@ -1,0 +1,30 @@
+---
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+DOCUMENTATION:
+  name: satellite_configuration_export_item_is_locked
+  short_description: Return whether a Foreman API object is locked
+  version_added: 1.4.0
+  description:
+    - Returns C(true) when a Foreman API dict exposes C(locked) as a truthy value.
+    - Used by C(filetree_create) when filtering factory templates and media at export.
+  positional: _input
+  options:
+    _input:
+      description: Foreman API object dict from an index or show response.
+      type: dict
+      required: true
+  author:
+    - infra.satellite_configuration contributors
+
+EXAMPLES: |
+  - name: Skip locked provisioning template
+    ansible.builtin.debug:
+      msg: skip
+    when: item | infra.satellite_configuration.satellite_configuration_export_item_is_locked
+
+RETURN:
+  _value:
+    description: C(true) when the object is locked.
+    type: bool
+...

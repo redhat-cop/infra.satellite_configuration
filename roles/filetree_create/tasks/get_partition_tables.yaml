@@ -10,9 +10,26 @@
     call_type: Partition Tables
     api_link: "/api/ptables?per_page=all"
 
+- name: Partition Tables | Resolve locked partition table export skip flag
+  ansible.builtin.set_fact:
+    __filetree_create_effective_skip_locked_partition_tables: >-
+      {{
+        false
+        if (filetree_create_include_locked_templates | default(false) | bool)
+        else (filetree_create_skip_locked_partition_tables | default(true) | bool)
+      }}
+
+- name: Partition Tables | Filter locked partition tables from export index
+  ansible.builtin.include_tasks: filter_locked_export_index.yaml
+  vars:
+    __filter_locked_source_list: "{{ result_api_response.json.results }}"
+    __filter_locked_skip: "{{ __filetree_create_effective_skip_locked_partition_tables }}"
+    __filter_locked_call_type: Partition Tables
+    __filter_locked_object_label: partition tables
+
 - name: Partition Tables | Retain the Partition Tables' info
   ansible.builtin.set_fact:
-    __partition_tables_list: "{{ result_api_response.json.results }}"
+    __partition_tables_list: "{{ __filter_locked_export_list }}"
 
 - name: Partition Tables | Get External Partition Tables Info
   ansible.builtin.include_tasks: get_partition_tables_do_work.yaml

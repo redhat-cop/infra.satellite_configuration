@@ -1,0 +1,36 @@
+---
+# Filter locked Foreman objects from an API index before per-item GET loops.
+# Vars: __filter_locked_source_list, __filter_locked_skip, __filter_locked_call_type,
+#       __filter_locked_object_label
+# Sets: __filter_locked_export_list, __filter_locked_skipped_names
+
+- name: Collect locked objects skipped from export | {{ __filter_locked_call_type }}
+  ansible.builtin.set_fact:
+    __filter_locked_skipped_names: >-
+      {{
+        __filter_locked_source_list
+        | infra.satellite_configuration.satellite_configuration_locked_item_names
+      }}
+  when: __filter_locked_skip | default(true) | bool
+
+- name: Build export list excluding locked objects | {{ __filter_locked_call_type }}
+  ansible.builtin.set_fact:
+    __filter_locked_export_list: >-
+      {{
+        __filter_locked_source_list
+        | infra.satellite_configuration.satellite_configuration_reject_locked_items(
+            __filter_locked_skip | default(true) | bool
+          )
+      }}
+
+- name: Report locked objects omitted from export | {{ __filter_locked_call_type }}
+  ansible.builtin.debug:
+    msg: >-
+      Omitted {{ __filter_locked_skipped_names | length }} locked {{ __filter_locked_object_label }}
+      from export{% if (__filter_locked_skipped_names | length) > 0 %} (sample:
+      {{ __filter_locked_skipped_names[:5] | join(', ') }}){% endif %}.
+  when:
+    - __filter_locked_skip | default(true) | bool
+    - __filter_locked_skipped_names | default([]) | length > 0
+
+...

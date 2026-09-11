@@ -15,6 +15,11 @@
     - result_api_response.content | length > 0
   block:
     - name: Partition Table (Do Work) | Set Info List (can take a while...)
+      when:
+        - not (
+            (__filetree_create_effective_skip_locked_partition_tables | default(true) | bool)
+            and ((result_api_response.content | from_json).locked | default(false) | bool)
+          )
       ansible.builtin.set_fact:
         __rs_info_list: "{{ __rs_info_list + [result_api_response.content | from_json] }}"
 ...
