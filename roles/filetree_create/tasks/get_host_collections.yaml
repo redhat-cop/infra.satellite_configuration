@@ -2,16 +2,26 @@
 - name: Host Collections | Reset the results variable
   ansible.builtin.set_fact:
     result_api_response: {}
+    __host_collections_info_list: []
 
-- name: Host Collections | Get Info
-  ansible.builtin.include_tasks: api_call.yaml
-  vars:
-    call_type: Host Collections
-    api_link: /katello/api/host_collections?full_result=true
+- name: Host Collections | Get Organizations
+  redhat.satellite.organization_info:
+    server_url: "{{ satellite.server_url }}"
+    username: "{{ satellite.admin.username }}"
+    password: "{{ satellite.admin.password }}"
+    validate_certs: "{{ satellite.validate_certs }}"
+  register: __result_organizations
+
+- name: Host Collections | Fetch host collections per organization
+  ansible.builtin.include_tasks: get_host_collections_do_work.yaml
+  loop: "{{ __result_organizations.organizations }}"
+  loop_control:
+    loop_var: __current_org
+    label: "{{ __current_org.name }}"
 
 - name: Host Collections | Set Info List
   ansible.builtin.set_fact:
-    info_list: "{{ result_api_response.json.results | sort(attribute='id') }}"
+    info_list: "{{ __host_collections_info_list | default([]) | sort(attribute='id') }}"
 
 - name: Host Collections | Template Out Results
   when:
@@ -20,4 +30,5 @@
   ansible.builtin.include_tasks: template_out.yaml
   vars:
     template_type: satellite_host_collections
+
 ...
