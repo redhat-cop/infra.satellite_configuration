@@ -1,0 +1,20 @@
+---
+- name: Host Collection org | Get host collections for organization
+  ansible.builtin.include_tasks: api_call.yaml
+  vars:
+    call_type: "Host Collections ({{ __current_org.name }})"
+    api_link: "/katello/api/host_collections?organization_id={{ __current_org.id }}&full_result=true"
+
+- name: Host Collection org | Append host collections with organization name
+  ansible.builtin.set_fact:
+    __host_collections_info_list: >-
+      {{
+        __host_collections_info_list | default([])
+        + (
+          result_api_response.json.results | default([])
+          | map('combine', {'organization': __current_org.name})
+          | list
+        )
+      }}
+
+...

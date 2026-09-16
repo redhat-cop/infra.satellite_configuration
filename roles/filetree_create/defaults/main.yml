@@ -11,6 +11,16 @@
 filetree_create_roles_name_excludes: "{{ satellite_builtin_role_name_skips }}"
 filetree_create_roles_name_excludes_extra: "{{ satellite_builtin_role_name_skips_extra }}"
 
+# Skip locked factory templates at export (symmetric with dispatch import guards).
+# Set filetree_create_include_locked_templates: true for full-site backup exports.
+filetree_create_include_locked_templates: false
+filetree_create_skip_locked_provisioning_templates: true
+filetree_create_skip_locked_partition_tables: true
+filetree_create_skip_locked_job_templates: true
+filetree_create_skip_locked_installation_mediums: true
+# Opt-in: omit the operating system used by the Satellite host itself (system dependency).
+filetree_create_skip_satellite_host_operatingsystem: false
+
 ###################
 ## Public interface
 ###################

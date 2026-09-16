@@ -10,9 +10,57 @@
     call_type: Operating Systems
     api_link: "/api/operatingsystems?per_page=all"
 
+- name: Operating Systems | Lookup Satellite host operating system for optional exclusion
+  when: filetree_create_skip_satellite_host_operatingsystem | default(false) | bool
+  ansible.builtin.uri:
+    method: GET
+    url: >-
+      {{ satellite.server_url }}/api/hosts?per_page=1&search={{
+        ('name = ' ~ (satellite.server_url | urlsplit('hostname'))) | urlencode
+      }}
+    user: "{{ satellite.admin.username }}"
+    password: "{{ satellite.admin.password }}"
+    validate_certs: "{{ satellite.validate_certs }}"
+    force_basic_auth: true
+    return_content: true
+    timeout: 1200
+  register: __satellite_host_operatingsystem_lookup
+
+- name: Operating Systems | Retain Satellite host operating system id for exclusion
+  when:
+    - filetree_create_skip_satellite_host_operatingsystem | default(false) | bool
+    - __satellite_host_operatingsystem_lookup.json.results | default([]) | length > 0
+    - __satellite_host_operatingsystem_lookup.json.results[0].operatingsystem_id is defined
+  ansible.builtin.set_fact:
+    __satellite_host_operatingsystem_id: "{{ __satellite_host_operatingsystem_lookup.json.results[0].operatingsystem_id }}"
+    __satellite_host_operatingsystem_name: >-
+      {{
+        __satellite_host_operatingsystem_lookup.json.results[0].operatingsystem_name
+        | default(__satellite_host_operatingsystem_lookup.json.results[0].display_name | default('unknown'))
+      }}
+
+- name: Operating Systems | Report Satellite host operating system omitted from export
+  ansible.builtin.debug:
+    msg: >-
+      Omitted Satellite host operating system {{ __satellite_host_operatingsystem_name }}
+      (id {{ __satellite_host_operatingsystem_id }}) from export.
+  when:
+    - filetree_create_skip_satellite_host_operatingsystem | default(false) | bool
+    - __satellite_host_operatingsystem_id is defined
+
 - name: Operating Systems | Retain the Operating Systems' info
   ansible.builtin.set_fact:
-    __operatingsystems_list: "{{ result_api_response.json.results }}"
+    __operatingsystems_list: >-
+      {{
+        result_api_response.json.results
+        | rejectattr('id', 'equalto', __satellite_host_operatingsystem_id)
+        | list
+        if (
+          (filetree_create_skip_satellite_host_operatingsystem | default(false) | bool)
+          and (__satellite_host_operatingsystem_id is defined)
+        )
+        else result_api_response.json.results
+      }}
 
 - name: Operating Systems | Get External Operating Systems Info
   ansible.builtin.include_tasks: get_operatingsystems_do_work.yaml
