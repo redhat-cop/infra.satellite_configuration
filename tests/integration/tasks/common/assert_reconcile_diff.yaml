@@ -1,0 +1,63 @@
+---
+# Assert reconcile diff fragment content after filetree_reconcile compare.
+# Required vars:
+#   __era_var_name — top-level list variable (for example satellite_organizations)
+#   __era_diff_path — base .reconcile_diff directory for the test
+# Optional:
+#   __era_expect_diff_count — exact entry count (default 0)
+#   __era_expect_present_new_min — minimum present_new-style entries (state present, not in live)
+#   __era_assert_label
+
+- name: Set reconcile diff file path | {{ __era_assert_label | default(__era_var_name) }}
+  ansible.builtin.set_fact:
+    __era_diff_file: >-
+      {{ __era_diff_path }}/{{ __era_var_name }}.d/{{ __era_var_name }}.yaml
+
+- name: Stat reconcile diff file | {{ __era_assert_label | default(__era_var_name) }}
+  ansible.builtin.stat:
+    path: "{{ __era_diff_file }}"
+  register: __era_diff_file_stat
+
+- name: Load reconcile diff entries | {{ __era_assert_label | default(__era_var_name) }}
+  ansible.builtin.set_fact:
+    __era_diff_entries: >-
+      {{
+        (
+          (
+            lookup('ansible.builtin.file', __era_diff_file)
+            | from_yaml
+          )[__era_var_name]
+          | default([])
+        )
+        if __era_diff_file_stat.stat.exists | default(false) | bool
+        else []
+      }}
+
+- name: Assert reconcile diff entry count | {{ __era_assert_label | default(__era_var_name) }}
+  when: __era_expect_diff_count is defined
+  ansible.builtin.assert:
+    that:
+      - __era_diff_entries | length == (__era_expect_diff_count | int)
+    fail_msg: >-
+      Reconcile diff {{ __era_assert_label | default(__era_var_name) }}: expected
+      {{ __era_expect_diff_count }} entries, got {{
+        __era_diff_entries | length
+      }} ({{ __era_diff_entries | map(attribute='name') | list | join(', ') }}).
+
+- name: Assert reconcile diff present_new minimum | {{ __era_assert_label | default(__era_var_name) }}
+  when: __era_expect_present_new_min | default(0) | int > 0
+  ansible.builtin.assert:
+    that:
+      - >-
+        (
+          __era_diff_entries
+          | selectattr('state', 'defined')
+          | selectattr('state', 'equalto', 'present')
+          | list
+          | length
+        ) >= (__era_expect_present_new_min | int)
+    fail_msg: >-
+      Reconcile diff {{ __era_assert_label | default(__era_var_name) }}: expected at least
+      {{ __era_expect_present_new_min }} state=present entries.
+
+...

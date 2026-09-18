@@ -221,6 +221,127 @@ satellite_organizations:
                     RECONCILE_UTILS.DEFAULT_IGNORE_KEYS,
                 )
 
+    def test_reconcile_directories_ignores_cac_objects_outside_scope_filters(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = pathlib.Path(temp_dir)
+            cac_dir = temp_path / "cac" / "satellite_organizations.d"
+            live_dir = temp_path / "live" / "satellite_organizations.d"
+            cac_dir.mkdir(parents=True)
+            live_dir.mkdir(parents=True)
+            shared = {"label": "red_ribbon", "name": "red_ribbon", "title": "red_ribbon"}
+            (cac_dir / "satellite_organizations.yaml").write_text(
+                yaml.dump(
+                    {
+                        "satellite_organizations": [
+                            shared,
+                            {
+                                "label": "out_of_scope",
+                                "name": "out_of_scope",
+                                "title": "out_of_scope",
+                            },
+                        ]
+                    },
+                    default_flow_style=False,
+                ),
+                encoding="utf-8",
+            )
+            (live_dir / "satellite_organizations.yaml").write_text(
+                yaml.dump({"satellite_organizations": [shared]}, default_flow_style=False),
+                encoding="utf-8",
+            )
+
+            diff_items, stats = RECONCILE_UTILS.reconcile_directories(
+                str(cac_dir),
+                str(live_dir),
+                "satellite_organizations",
+                "name",
+                RECONCILE_UTILS.DEFAULT_IGNORE_KEYS,
+                {"organizations": ["red_ribbon"]},
+            )
+
+            self.assertEqual(diff_items, [])
+            self.assertEqual(stats["present_new"], 0)
+
+    def test_reconcile_directories_ignores_live_objects_outside_scope_filters(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = pathlib.Path(temp_dir)
+            cac_dir = temp_path / "cac" / "satellite_organizations.d"
+            live_dir = temp_path / "live" / "satellite_organizations.d"
+            cac_dir.mkdir(parents=True)
+            live_dir.mkdir(parents=True)
+            shared = {"label": "red_ribbon", "name": "red_ribbon", "title": "red_ribbon"}
+            (cac_dir / "satellite_organizations.yaml").write_text(
+                yaml.dump({"satellite_organizations": [shared]}, default_flow_style=False),
+                encoding="utf-8",
+            )
+            (live_dir / "satellite_organizations.yaml").write_text(
+                yaml.dump(
+                    {
+                        "satellite_organizations": [
+                            shared,
+                            {
+                                "label": "live_only_out_of_scope",
+                                "name": "live_only_out_of_scope",
+                                "title": "live_only_out_of_scope",
+                            },
+                        ]
+                    },
+                    default_flow_style=False,
+                ),
+                encoding="utf-8",
+            )
+
+            diff_items, stats = RECONCILE_UTILS.reconcile_directories(
+                str(cac_dir),
+                str(live_dir),
+                "satellite_organizations",
+                "name",
+                RECONCILE_UTILS.DEFAULT_IGNORE_KEYS,
+                {"organizations": ["red_ribbon"]},
+            )
+
+            self.assertEqual(diff_items, [])
+            self.assertEqual(stats["absent"], 0)
+
+    def test_reconcile_directories_without_scope_filters_matches_legacy_behavior(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = pathlib.Path(temp_dir)
+            cac_dir = temp_path / "cac" / "satellite_organizations.d"
+            live_dir = temp_path / "live" / "satellite_organizations.d"
+            cac_dir.mkdir(parents=True)
+            live_dir.mkdir(parents=True)
+            shared = [
+                {"label": "red_ribbon", "name": "red_ribbon", "title": "red_ribbon"},
+                {"label": "datacenter", "name": "datacenter", "title": "datacenter"},
+            ]
+            (cac_dir / "satellite_organizations.yaml").write_text(
+                yaml.dump({"satellite_organizations": shared}, default_flow_style=False),
+                encoding="utf-8",
+            )
+            live_items = shared + [
+                {
+                    "label": "test_org_to_be_deleted",
+                    "name": "test_org_to_be_deleted",
+                    "title": "test_org_to_be_deleted",
+                }
+            ]
+            (live_dir / "satellite_organizations.yaml").write_text(
+                yaml.dump({"satellite_organizations": live_items}, default_flow_style=False),
+                encoding="utf-8",
+            )
+
+            diff_items, stats = RECONCILE_UTILS.reconcile_directories(
+                str(cac_dir),
+                str(live_dir),
+                "satellite_organizations",
+                "name",
+                RECONCILE_UTILS.DEFAULT_IGNORE_KEYS,
+                None,
+            )
+
+            self.assertEqual(stats["absent"], 1)
+            self.assertEqual([item["name"] for item in diff_items], ["test_org_to_be_deleted"])
+
 
 if __name__ == "__main__":
     unittest.main()

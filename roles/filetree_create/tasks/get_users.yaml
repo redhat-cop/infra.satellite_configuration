@@ -7,11 +7,29 @@
   ansible.builtin.include_tasks: api_call.yaml
   vars:
     call_type: Users
-    api_link: /api/users?per_page=all
+    api_link: >-
+      {{
+        '/api/users?per_page=all'
+        | infra.satellite_configuration.satellite_configuration_append_export_search_for_resource(
+            satellite_configuration_filetree_create_filters,
+            'users'
+          )
+      }}
 
 - name: Users | Create a List
   ansible.builtin.set_fact:
-    all_results: "{{ result_api_response.json.results | sort(attribute='id') }}"
+    all_results: >-
+      {{
+        result_api_response.json.results
+        | infra.satellite_configuration.satellite_configuration_filter_export_items(
+            satellite_configuration_filetree_create_filters
+            | infra.satellite_configuration.satellite_configuration_filters_for_post_api_export(
+                'users'
+              ),
+            'login'
+          )
+        | sort(attribute='id')
+      }}
 
 - name: Users | Get Detailed Info
   when: all_results | length > 0

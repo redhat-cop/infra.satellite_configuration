@@ -36,6 +36,7 @@ Every Ansible task/playbook YAML file under `roles/` and `playbooks/` must end w
 | `format-generated-yaml` | `format_yaml` module usage |
 | `fqcn-standards` | FQCN rules for all code |
 | `changelog-fragments` | Required `changelogs/fragments/` entries for PRs |
+| `live-satellite-integration-tests` | Live-Satellite tests under `tests/integration/` (full roles, yaml_format) |
 
 ## Domain Workflows (dispatch / export)
 

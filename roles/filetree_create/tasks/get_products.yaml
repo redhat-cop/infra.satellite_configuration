@@ -4,12 +4,9 @@
     result_api_response: {}
 
 - name: Products | Get Organizations
-  redhat.satellite.organization_info:
-    server_url: "{{ satellite.server_url }}"
-    username: "{{ satellite.admin.username }}"
-    password: "{{ satellite.admin.password }}"
-    validate_certs: "{{ satellite.validate_certs }}"
-  register: __result_organizations
+  ansible.builtin.include_tasks: resolve_export_organizations.yaml
+  vars:
+    __export_org_call_type: Products
 
 - name: Products | Get Info
   ansible.builtin.include_tasks: api_call.yaml
@@ -17,29 +14,55 @@
     call_type: Products
     api_link: >-
       {{
-        '/katello/api/products?organization_id=' ~ (__current_org.id | string)
-        ~ '&full_result=true'
-        ~ (
-          '&search=' ~ ('redhat=false' | urlencode)
-          if (satellite_configuration_filetree_export_skip_provider_products | default(true) | bool)
-          else ''
+        (
+          '/katello/api/products?organization_id=' ~ (__current_org.id | string)
+          ~ '&full_result=true'
         )
+        | infra.satellite_configuration.satellite_configuration_append_export_search_for_resource(
+            satellite_configuration_filetree_create_filters,
+            'products',
+            'redhat=false'
+            if (satellite_configuration_filetree_export_skip_provider_products | default(true) | bool)
+            else omit
+          )
       }}
-  loop: "{{ __result_organizations.organizations }}"
+  loop: >-
+    {{
+      __result_organizations.organizations
+      | infra.satellite_configuration.satellite_configuration_filter_export_organizations(
+          satellite_configuration_filetree_create_filters
+        )
+    }}
   loop_control:
     loop_var: __current_org
   register: result_api_response
 
 - name: Products | Set Info List
   ansible.builtin.set_fact:
-    info_list: "{{ result_api_response.json.results | sort(attribute='id') }}"
+    info_list: >-
+      {{
+        result_api_response.json.results
+        | infra.satellite_configuration.satellite_configuration_filter_export_items(
+            satellite_configuration_filetree_create_filters
+            | infra.satellite_configuration.satellite_configuration_filters_for_post_api_export(
+                'products'
+              )
+          )
+        | sort(attribute='id')
+      }}
 
 - name: Products | Fetch sync plans per organization
   ansible.builtin.include_tasks: api_call.yaml
   vars:
     call_type: Products sync plans
     api_link: "/katello/api/sync_plans?organization_id={{ __current_org.id }}&per_page=1000"
-  loop: "{{ __result_organizations.organizations }}"
+  loop: >-
+    {{
+      __result_organizations.organizations
+      | infra.satellite_configuration.satellite_configuration_filter_export_organizations(
+          satellite_configuration_filetree_create_filters
+        )
+    }}
   loop_control:
     loop_var: __current_org
   register: __products_sync_plans_api

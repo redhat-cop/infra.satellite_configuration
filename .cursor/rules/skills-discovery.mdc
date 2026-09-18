@@ -28,6 +28,7 @@ Skills use **`.mdc`** (Markdown + YAML frontmatter), not plain `.md`. Frontmatte
 - `Use extend-filetree-create-object-type for export of a new object type.`
 - `Use extend-dispatch-object-type to wire dispatch for satellite_subnets.`
 - `Use changelog-fragments before opening a PR with user-visible changes.`
+- `Use live-satellite-integration-tests when adding or changing tests/integration playbooks.`
 
 ## Skill Catalog
 

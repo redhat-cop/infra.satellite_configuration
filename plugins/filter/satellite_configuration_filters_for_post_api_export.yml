@@ -1,0 +1,44 @@
+---
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+DOCUMENTATION:
+  name: satellite_configuration_filters_for_post_api_export
+  short_description: Omit export filter dimensions already applied via API search
+  version_added: 1.4.0
+  description:
+    - Returns a copy of export scope filters with keys removed when the resource type
+      already applies them through Foreman/Katello C(search=) in filetree_create export.
+    - Use before C(satellite_configuration_filter_export_items) on API index results so
+      objects missing related-name fields (for example subnet C(domains)) are not dropped twice.
+  positional: _input
+  options:
+    _input:
+      description: Export scope filters (typically C(satellite_configuration_filetree_create_filters)).
+      type: dict
+      required: true
+    resource_type:
+      description: filetree_create export resource key (for example C(subnets), C(hostgroups)).
+      type: str
+      required: true
+  author:
+    - infra.satellite_configuration contributors
+
+EXAMPLES: |
+  - name: Post-filter subnet API results without re-applying domain scope
+    ansible.builtin.set_fact:
+      info_list: >-
+        {{
+          result_api_response.json.results
+          | infra.satellite_configuration.satellite_configuration_filter_export_items(
+              satellite_configuration_filetree_create_filters
+              | infra.satellite_configuration.satellite_configuration_filters_for_post_api_export(
+                  'subnets'
+                )
+            )
+        }}
+
+RETURN:
+  _value:
+    description: Export filters with API-scoped dimensions removed.
+    type: dict
+...

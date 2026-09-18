@@ -1,0 +1,50 @@
+---
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+DOCUMENTATION:
+  name: satellite_configuration_filter_export_items
+  short_description: Filter export objects by organization scope and name patterns
+  version_added: 1.4.0
+  description:
+    - Applies C(satellite_configuration_filetree_create_filters) to Satellite API index or detail objects.
+    - Name patterns use shell globs by default; set C(name_use_regex) to C(true) for regular expressions.
+    - Organization scope uses the C(organization) or C(organization_name) field when present on each object.
+  positional: _input
+  options:
+    _input:
+      description: List of Satellite API object dicts to export.
+      type: list
+      elements: dict
+      required: true
+    filters:
+      description: Export scope filters (typically C(satellite_configuration_filetree_create_filters)).
+      type: dict
+      default: {}
+    name_key:
+      description: Object attribute used as the display name (for example C(login) for users).
+      type: str
+      default: name
+    apply_hostgroup_parents:
+      description: When C(true), apply C(hostgroup_parents) branch filtering on Foreman C(title) paths.
+      type: bool
+      default: false
+  author:
+    - infra.satellite_configuration contributors
+
+EXAMPLES: |
+  - name: Export only matching host groups
+    ansible.builtin.set_fact:
+      export_list: >-
+        {{
+          hostgroups
+          | infra.satellite_configuration.satellite_configuration_filter_export_items(
+              satellite_configuration_filetree_create_filters
+            )
+        }}
+
+RETURN:
+  _value:
+    description: Filtered object list.
+    type: list
+    elements: dict
+...

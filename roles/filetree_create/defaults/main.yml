@@ -11,6 +11,16 @@
 filetree_create_roles_name_excludes: "{{ satellite_builtin_role_name_skips }}"
 filetree_create_roles_name_excludes_extra: "{{ satellite_builtin_role_name_skips_extra }}"
 
+# Skip locked factory templates at export (symmetric with dispatch import guards).
+# Set filetree_create_include_locked_templates: true for full-site backup exports.
+filetree_create_include_locked_templates: false
+filetree_create_skip_locked_provisioning_templates: true
+filetree_create_skip_locked_partition_tables: true
+filetree_create_skip_locked_job_templates: true
+filetree_create_skip_locked_installation_mediums: true
+# Opt-in: omit the operating system used by the Satellite host itself (system dependency).
+filetree_create_skip_satellite_host_operatingsystem: false
+
 ###################
 ## Public interface
 ###################
@@ -21,6 +31,9 @@ output_path: "{{ satellite_configuration_filetree_path }}"
 set_ownership: false
 
 satellite_configuration_filetree_create_secure_logging: true
+
+# Export scope filters (organization allow/deny lists, name glob/regex patterns).
+# Defined in role global_vars as satellite_configuration_filetree_create_filters.
 
 # Omit subscription/provider-managed products from export (Katello search redhat=false).
 # The products index API omits redhat/provider_name; template-side checks alone are insufficient.

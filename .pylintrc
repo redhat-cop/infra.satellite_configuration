@@ -12,7 +12,12 @@ disable =
     too-many-arguments,
     too-many-positional-arguments,
     too-many-ancestors,
-    broad-exception-caught
+    broad-exception-caught,
+    too-many-locals,
+    too-many-branches,
+    too-many-statements,
+    too-many-public-methods,
+    duplicate-code
 
 [FORMAT]
 max-line-length = 160

@@ -1,0 +1,41 @@
+---
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+DOCUMENTATION:
+  name: satellite_configuration_filter_export_organizations
+  short_description: Filter organizations for filetree_create export scope
+  version_added: 1.4.0
+  description:
+    - Applies C(satellite_configuration_filetree_create_filters) organization allow/deny lists and name patterns to organization objects.
+    - An empty C(organizations) allowlist exports every organization that passes the other filters.
+  positional: _input
+  options:
+    _input:
+      description: List of organization dicts or names from C(organization_info).
+      type: list
+      elements: raw
+      required: true
+    filters:
+      description: Export scope filters (typically C(satellite_configuration_filetree_create_filters)).
+      type: dict
+      default: {}
+  author:
+    - infra.satellite_configuration contributors
+
+EXAMPLES: |
+  - name: Limit Katello export loops to selected organizations
+    ansible.builtin.debug:
+      msg: >-
+        {{
+          organizations
+          | infra.satellite_configuration.satellite_configuration_filter_export_organizations(
+              satellite_configuration_filetree_create_filters
+            )
+        }}
+
+RETURN:
+  _value:
+    description: Filtered organization list.
+    type: list
+    elements: raw
+...

@@ -11,6 +11,17 @@
         | default(satellite_configuration_filetree_read_merge_key | default('name'))
       }}
     ignore_keys: "{{ satellite_configuration_filetree_reconcile_ignore_keys }}"
+    scope_filters: >-
+      {{
+        satellite_configuration_filetree_reconcile_filters
+        if satellite_configuration_filetree_reconcile_apply_scope_filters | bool
+        else omit
+      }}
+    roles_name_excludes: >-
+      {{
+        satellite_configuration_filetree_reconcile_roles_name_excludes
+        + satellite_configuration_filetree_reconcile_roles_name_excludes_extra
+      }}
   register: __reconcile_diff_result
   no_log: >-
     {{

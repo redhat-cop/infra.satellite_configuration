@@ -1,0 +1,168 @@
+---
+# Fixture tasks after filetree_create export and before filetree_reconcile compare.
+
+- name: Reconcile | organizations CaC out of scope does not create present entries
+  when: __integration_out_of_scope_org | default('') | length > 0
+  tags:
+    - reconcile
+    - reconcile_cac_out_of_scope
+  block:
+    - name: Reconcile CaC out of scope | Ensure reconcile directories exist
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: "0755"
+      loop:
+        - "{{ __integration_reconcile_cac_path }}/satellite_organizations.d"
+        - "{{ __integration_reconcile_live_path }}/satellite_organizations.d"
+        - "{{ __integration_reconcile_diff_path }}/satellite_organizations.d"
+
+    - name: Reconcile CaC out of scope | Copy filtered live organizations export
+      ansible.builtin.copy:
+        src: "{{ __integration_organizations_export_path }}"
+        dest: "{{ __integration_reconcile_live_path }}/satellite_organizations.d/satellite_organizations.yaml"
+        mode: "0644"
+
+    - name: Reconcile CaC out of scope | Write CaC with in-scope and out-of-scope organizations
+      ansible.builtin.copy:
+        dest: "{{ __integration_reconcile_cac_path }}/satellite_organizations.d/satellite_organizations.yaml"
+        mode: "0644"
+        content: |
+          ---
+          satellite_organizations:
+            - name: {{ __integration_filter_org }}
+              label: {{ __integration_filter_org }}
+              title: {{ __integration_filter_org }}
+            - name: {{ __integration_out_of_scope_org }}
+              label: {{ __integration_out_of_scope_org }}
+              title: {{ __integration_out_of_scope_org }}
+          ...
+
+- name: Reconcile | live out of scope does not create absent entries
+  when: __integration_out_of_scope_org | default('') | length > 0
+  tags:
+    - reconcile
+    - reconcile_live_out_of_scope
+  block:
+    - name: Reconcile live out of scope | Ensure reconcile directories exist
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: "0755"
+      loop:
+        - "{{ __integration_reconcile_cac_path }}/satellite_organizations.d"
+        - "{{ __integration_reconcile_live_path }}/satellite_organizations.d"
+        - "{{ __integration_reconcile_diff_path }}/satellite_organizations.d"
+
+    - name: Reconcile live out of scope | Write CaC with in-scope organization only
+      ansible.builtin.copy:
+        dest: "{{ __integration_reconcile_cac_path }}/satellite_organizations.d/satellite_organizations.yaml"
+        mode: "0644"
+        content: |
+          ---
+          satellite_organizations:
+            - name: {{ __integration_filter_org }}
+              label: {{ __integration_filter_org }}
+              title: {{ __integration_filter_org }}
+          ...
+
+    - name: Reconcile live out of scope | Write live export with extra out-of-scope organization
+      ansible.builtin.copy:
+        dest: "{{ __integration_reconcile_live_path }}/satellite_organizations.d/satellite_organizations.yaml"
+        mode: "0644"
+        content: |
+          ---
+          satellite_organizations:
+            - name: {{ __integration_filter_org }}
+              label: {{ __integration_filter_org }}
+              title: {{ __integration_filter_org }}
+            - name: {{ __integration_out_of_scope_org }}
+              label: {{ __integration_out_of_scope_org }}
+              title: {{ __integration_out_of_scope_org }}
+          ...
+
+- name: Reconcile | unscoped compare reports out-of-scope CaC as present
+  when: __integration_out_of_scope_org | default('') | length > 0
+  tags:
+    - reconcile
+    - reconcile_unscoped_legacy
+  block:
+    - name: Reconcile unscoped legacy | Ensure reconcile directories exist
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: "0755"
+      loop:
+        - "{{ __integration_reconcile_cac_path }}/satellite_organizations.d"
+        - "{{ __integration_reconcile_live_path }}/satellite_organizations.d"
+        - "{{ __integration_reconcile_diff_path }}/satellite_organizations.d"
+
+    - name: Reconcile unscoped legacy | Write CaC with in-scope and out-of-scope organizations
+      ansible.builtin.copy:
+        dest: "{{ __integration_reconcile_cac_path }}/satellite_organizations.d/satellite_organizations.yaml"
+        mode: "0644"
+        content: |
+          ---
+          satellite_organizations:
+            - name: {{ __integration_filter_org }}
+              label: {{ __integration_filter_org }}
+              title: {{ __integration_filter_org }}
+            - name: {{ __integration_out_of_scope_org }}
+              label: {{ __integration_out_of_scope_org }}
+              title: {{ __integration_out_of_scope_org }}
+          ...
+
+    - name: Reconcile unscoped legacy | Write live export with in-scope organization only
+      ansible.builtin.copy:
+        dest: "{{ __integration_reconcile_live_path }}/satellite_organizations.d/satellite_organizations.yaml"
+        mode: "0644"
+        content: |
+          ---
+          satellite_organizations:
+            - name: {{ __integration_filter_org }}
+              label: {{ __integration_filter_org }}
+              title: {{ __integration_filter_org }}
+          ...
+
+- name: Reconcile | domains scope ignores out-of-scope CaC domain
+  when:
+    - __integration_filter_domain_name | default('') | length > 0
+    - __integration_exclude_domain_name | default('') | length > 0
+  tags:
+    - reconcile
+    - reconcile_domains_scope
+  block:
+    - name: Reconcile domains scope | Ensure reconcile directories exist
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: "0755"
+      loop:
+        - "{{ __integration_reconcile_cac_path }}/satellite_domains.d"
+        - "{{ __integration_reconcile_live_path }}/satellite_domains.d"
+        - "{{ __integration_reconcile_diff_path }}/satellite_domains.d"
+
+    - name: Reconcile domains scope | Stat filtered live domains export
+      ansible.builtin.stat:
+        path: "{{ __integration_domains_export_path }}"
+      register: __integration_domains_export_stat
+
+    - name: Reconcile domains scope | Copy filtered live domains export
+      ansible.builtin.copy:
+        src: "{{ __integration_domains_export_path }}"
+        dest: "{{ __integration_reconcile_live_path }}/satellite_domains.d/satellite_domains.yaml"
+        mode: "0644"
+      when: __integration_domains_export_stat.stat.exists | default(false) | bool
+
+    - name: Reconcile domains scope | Write CaC with in-scope and out-of-scope domains
+      ansible.builtin.copy:
+        dest: "{{ __integration_reconcile_cac_path }}/satellite_domains.d/satellite_domains.yaml"
+        mode: "0644"
+        content: |
+          ---
+          satellite_domains:
+            - name: {{ __integration_filter_domain_name }}
+            - name: {{ __integration_exclude_domain_name }}
+          ...
+
+...

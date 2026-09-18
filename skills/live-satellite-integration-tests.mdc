@@ -1,0 +1,123 @@
+---
+description: Write and run live-Satellite integration tests under tests/integration using full filetree_create, filetree_read, and filetree_reconcile roles with CLI --tags.
+alwaysApply: false
+globs: "tests/integration/**"
+---
+
+# Live Satellite Integration Tests
+
+Manual integration tests under `tests/integration/` validate behavior against a real Satellite instance (`SATELLITE_SERVER_URL`, `SATELLITE_USERNAME`, `SATELLITE_PASSWORD`). They are **not** run in CI by default.
+
+## Full role entrypoint + CLI `--tags`
+
+Production partial exports use the **full role** and CLI tag selection:
+
+```bash
+ansible-playbook playbooks/run_filetree_create.yaml --tags organizations,yaml_format
+ansible-playbook playbooks/run_filetree_reconcile.yaml --tags compare,organizations
+```
+
+Integration tests must do the same: `import_role` for `filetree_create` / `filetree_reconcile` / `filetree_read` — **not** `tasks_from: get_*.yaml` or `tasks_from: compare_generate.yaml`.
+
+`ansible_run_tags` is set by Ansible from CLI `--tags` only; it **cannot** be assigned from playbook vars to emulate `--tags` inside a single untagged run.
+
+### Do not use `apply: tags` on `include_role`
+
+`apply: tags` adds the listed tags to **every** task in the role, which breaks per-block tags in `main.yaml` / `main.yml`.
+
+### Run the suite: shell script
+
+Use `tests/integration/run_integration_tests.sh` so each case gets the correct `--tags` (setup `always`, test selector, object block, `yaml_format` or `compare`):
+
+```bash
+tests/integration/run_integration_tests.sh all
+tests/integration/run_integration_tests.sh filters
+tests/integration/run_integration_tests.sh reconcile
+```
+
+### filetree_create in a test
+
+```yaml
+- ansible.builtin.import_role:
+    name: infra.satellite_configuration.filetree_create
+  vars:
+    output_path: "{{ satellite_configuration_filetree_path }}"
+    satellite_configuration_filetree_create_filters: "{{ __efc_filters }}"
+```
+
+Invoke with CLI tags, for example:
+
+```bash
+ansible-playbook tests/integration/filetree_create_export_filters.yaml \
+  --tags always,filter_organizations,organizations,yaml_format
+```
+
+Call `import_role: filetree_create` / `filetree_reconcile` at **play level without tags** (same as `playbooks/run_filetree_create.yaml`). Configure filters in tagged blocks, export/compare via untagged `import_role`, then assert. **Never** nest `import_role` inside tagged blocks or tag the import — tags on the import are added to every task in the role (same pitfall as `apply: tags`).
+
+Resolve `satellite` once in playbook setup (`import_role: global_vars`, `resolve_satellite_source.yaml`) before exports — the untagged resolve task in `main.yaml` is skipped when `--tags` is used.
+
+### filetree_reconcile in a test
+
+```yaml
+- ansible.builtin.import_role:
+    name: infra.satellite_configuration.filetree_reconcile
+  vars:
+    satellite_configuration_filetree_reconcile_cac_path: "..."
+    satellite_configuration_filetree_reconcile_filters: "{{ __erp_scope_filters }}"
+```
+
+Invoke with CLI tags, for example:
+
+```bash
+ansible-playbook tests/integration/filetree_create_export_filters.yaml \
+  --tags always,reconcile,reconcile_cac_out_of_scope,organizations,yaml_format,compare
+```
+
+Helper: `tests/integration/tasks/common/run_filetree_reconcile.yaml`.
+
+Combined export+reconcile playbooks must extend `satellite_configuration_filetree_reconcile_meta_tags` so integration test tags (`filter_*`, `reconcile_*`, `yaml_format`, …) are not treated as object-type tags in `ansible_run_tags` scoping.
+
+### filetree_read
+
+When adding ingest tests, use `import_role` for `filetree_read` with CLI `--tags <object_type>`. Do not use `tasks_from` or `apply: tags`.
+
+## yaml_format is mandatory on export
+
+Include tag `yaml_format` in CLI `--tags` for every export test (or run without `--tags` for a full export). Do **not** use `--skip-tags yaml_format`.
+
+## Shared helpers
+
+| Helper | Purpose |
+| --- | --- |
+| `configure_filter_tests.yaml` / `assert_filter_tests.yaml` | Filter scope setup and assertions around play-level `import_role` |
+| `prepare_reconcile_tests.yaml` / `finalize_reconcile_tests.yaml` / `assert_reconcile_tests.yaml` | Reconcile fixture setup around play-level role imports |
+| `assert_reconcile_diff.yaml` | Read `.reconcile_diff/` after compare |
+| `run_integration_tests.sh` | Run each case with correct `--tags` |
+
+## Playbook structure
+
+1. Resolve `satellite` from env or `-e`.
+2. `import_role: global_vars` and `resolve_satellite_source.yaml` (tag `always`).
+3. Store `__integration_export_filters_baseline`.
+4. Discover API fixtures once (`discover_fixtures.yaml`, tag `always`).
+5. Per-test block: tag `filter_<name>` or `reconcile_<case>` → set scope → `import_role` (full role) → assert. Helper tasks in included files use `tags: [always]` only.
+6. Tag `always` only on **setup/discovery** helpers (`discover_fixtures.yaml`, playbook setup tasks). `include_tasks` does not propagate tags to untagged inner tasks — those helpers need explicit `always`. Tasks inside a `filter_<test>` / `reconcile_<case>` block inherit the block tag; do **not** add `always` there or on `import_role` for the role under test.
+
+## Assertions
+
+- Compare **semantic** content (names, counts) after `format_yaml`.
+- Build expected API subsets with `satellite_configuration_filter_export_items` / `satellite_configuration_filter_export_organizations`.
+- After reconcile compare, read diff YAML from `satellite_configuration_filetree_reconcile_diff_path`.
+
+## Checklist
+
+- [ ] Full role via `import_role` (no `tasks_from: get_*` / `compare_generate.yaml`)
+- [ ] No `apply: tags` on `include_role`
+- [ ] CLI `--tags` documented or wrapped in `run_integration_tests.sh`
+- [ ] Setup tasks tagged `always`
+- [ ] Reconcile meta tags extended in combined playbooks
+- [ ] New tags documented in `tests/README.md`
+- [ ] Skip when fixtures missing (`when:` + discovery facts)
+- [ ] YAML files end with `...` (`yaml[document-end]`)
+
+...

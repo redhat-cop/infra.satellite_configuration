@@ -46,6 +46,20 @@ options:
     default: [created_at, updated_at, id, state]
     type: list
     elements: str
+  scope_filters:
+    description:
+      - Export scope filters applied to both live and CaC objects before reconciliation.
+      - When omitted or V(null), no scope filtering is applied (legacy compare behavior).
+      - Use the same structure as C(satellite_configuration_filetree_create_filters).
+    type: dict
+    default: null
+  roles_name_excludes:
+    description:
+      - Exact role names excluded before scope filtering when comparing C(satellite_roles).
+      - Aligns with C(filetree_create_roles_name_excludes) on export.
+    type: list
+    elements: str
+    default: []
 author:
   - Ivan Aragonés (@ivarmu)
 """
@@ -149,6 +163,13 @@ def run_module():
                 "default": ["created_at", "updated_at", "id", "state"],
                 "no_log": False,
             },
+            "scope_filters": {"type": "dict", "default": None},
+            "roles_name_excludes": {
+                "type": "list",
+                "elements": "str",
+                "default": [],
+                "no_log": False,
+            },
         },
         supports_check_mode=True,
     )
@@ -166,6 +187,8 @@ def run_module():
             params["var_name"],
             params["merge_key"],
             frozenset(params["ignore_keys"]),
+            params["scope_filters"],
+            params["roles_name_excludes"],
         )
 
         if not diff_items:

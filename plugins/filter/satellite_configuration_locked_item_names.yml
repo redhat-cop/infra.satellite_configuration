@@ -1,0 +1,35 @@
+---
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+DOCUMENTATION:
+  name: satellite_configuration_locked_item_names
+  short_description: Return names of locked Foreman API objects
+  version_added: 1.4.0
+  description:
+    - Returns the C(name) of each locked dict in a Foreman API index list.
+    - Used by C(filetree_create) to log skipped factory objects during export.
+  positional: _input
+  options:
+    _input:
+      description: List of Foreman API object dicts from an index response.
+      type: list
+      elements: dict
+      required: true
+  author:
+    - infra.satellite_configuration contributors
+
+EXAMPLES: |
+  - name: Collect locked provisioning template names
+    ansible.builtin.set_fact:
+      skipped_names: >-
+        {{
+          provisioning_templates
+          | infra.satellite_configuration.satellite_configuration_locked_item_names
+        }}
+
+RETURN:
+  _value:
+    description: Names of locked objects in the input list.
+    type: list
+    elements: str
+...

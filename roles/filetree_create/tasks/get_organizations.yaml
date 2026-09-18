@@ -9,7 +9,14 @@
 
 - name: Organizations | Set Info List
   ansible.builtin.set_fact:
-    info_list: "{{ __organization_result_api_response.organizations | sort(attribute='id') }}" # removed filter | rejectattr('name','==', 'Default Organization')
+    info_list: >-
+      {{
+        __organization_result_api_response.organizations
+        | infra.satellite_configuration.satellite_configuration_filter_export_organizations(
+            satellite_configuration_filetree_create_filters
+          )
+        | sort(attribute='id')
+      }}
 
 - name: Organizations | Enrich with host parameters
   ansible.builtin.include_tasks: enrich_info_list_parameters.yaml

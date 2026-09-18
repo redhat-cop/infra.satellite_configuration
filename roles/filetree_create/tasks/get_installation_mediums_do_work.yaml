@@ -25,6 +25,11 @@
       when: __installation_medium_detail.operatingsystems | default([]) | length > 0
 
     - name: Installation Medium (Do Work) | Set Info List (can take a while...)
+      when:
+        - not (
+            (__filetree_create_effective_skip_locked_installation_mediums | default(true) | bool)
+            and (__installation_medium_detail.locked | default(false) | bool)
+          )
       ansible.builtin.set_fact:
         __rs_info_list: >-
           {{

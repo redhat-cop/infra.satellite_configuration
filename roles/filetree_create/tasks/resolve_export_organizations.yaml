@@ -1,0 +1,29 @@
+---
+# Fetch organizations and expose __result_organizations for Katello-scoped export tasks.
+# Vars: __export_org_call_type (label for task names)
+#
+# Cache via set_fact only. Do not register into __result_organizations when the lookup
+# is skipped — Ansible still overwrites register vars on skipped tasks, which would
+# replace a prior successful organization_info result with a skipped dict that has no
+# organizations key.
+
+- name: "{{ __export_org_call_type }} | Get Organizations"
+  when: __result_organizations is not defined
+  redhat.satellite.organization_info:
+    server_url: "{{ satellite.server_url }}"
+    username: "{{ satellite.admin.username }}"
+    password: "{{ satellite.admin.password }}"
+    validate_certs: "{{ satellite.validate_certs }}"
+  register: __export_organizations_lookup
+  # noqa: name[template]
+
+- name: "{{ __export_org_call_type }} | Cache organizations for later export tasks"
+  when:
+    - __result_organizations is not defined
+    - __export_organizations_lookup is defined
+    - __export_organizations_lookup.organizations is defined
+  ansible.builtin.set_fact:
+    __result_organizations: "{{ __export_organizations_lookup }}"
+  # noqa: name[template]
+
+...

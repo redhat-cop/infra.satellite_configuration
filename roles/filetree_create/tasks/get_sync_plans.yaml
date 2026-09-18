@@ -19,5 +19,14 @@
   ansible.builtin.include_tasks: template_out.yaml
   vars:
     template_type: satellite_sync_plans
-    info_list: "{{ __sp_info_list }}"
+    info_list: >-
+      {{
+        __sp_info_list
+        | infra.satellite_configuration.satellite_configuration_filter_export_items(
+            satellite_configuration_filetree_create_filters
+            | infra.satellite_configuration.satellite_configuration_filters_for_post_api_export(
+                'sync_plans'
+              )
+          )
+      }}
 ...

@@ -1,0 +1,40 @@
+---
+# Assert exported list length matches expected count (for types without stable name keys).
+# Export runs via play-level import_role in filetree_create_export_filters.yaml.
+# Required: __efa_var_name, __efc_role_tag, __efa_filters, __efa_expected_count, __efa_assert_label
+
+- name: Set export file path | {{ __efa_assert_label }}
+  ansible.builtin.set_fact:
+    __efa_export_path: >-
+      {{ satellite_configuration_filetree_path }}/{{ __efa_var_name }}.d/{{ __efa_var_name }}.yaml
+
+- name: Stat exported object file | {{ __efa_assert_label }}
+  ansible.builtin.stat:
+    path: "{{ __efa_export_path }}"
+  register: __efa_export_stat
+
+- name: Load exported object count | {{ __efa_assert_label }}
+  ansible.builtin.set_fact:
+    __efa_exported_count: >-
+      {{
+        (
+          (
+            lookup('ansible.builtin.file', __efa_export_path)
+            | from_yaml
+          )[__efa_var_name]
+          | default([])
+          | length
+        )
+        if __efa_export_stat.stat.exists | default(false) | bool
+        else 0
+      }}
+
+- name: Assert export count matches scoped expectation | {{ __efa_assert_label }}
+  ansible.builtin.assert:
+    that:
+      - __efa_exported_count | int == __efa_expected_count | int
+    fail_msg: >-
+      Filter {{ __efa_assert_label }}: exported count {{ __efa_exported_count }}
+      != expected {{ __efa_expected_count }}.
+
+...

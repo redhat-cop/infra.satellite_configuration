@@ -11,7 +11,13 @@
 
 - name: Usergroups | Retain the Usergroups' info
   ansible.builtin.set_fact:
-    __usergroups_list: "{{ result_api_response.json.results }}"
+    __usergroups_list: >-
+      {{
+        result_api_response.json.results
+        | infra.satellite_configuration.satellite_configuration_filter_export_items(
+            satellite_configuration_filetree_create_filters
+          )
+      }}
 
 - name: Usergroups | Get External Usergroups Info
   ansible.builtin.include_tasks: get_usergroups_do_work.yaml

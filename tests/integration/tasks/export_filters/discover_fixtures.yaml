@@ -1,0 +1,451 @@
+---
+# Test playbook helper tasks (not the role under test). Tag always for CLI --tags runs.
+
+- name: Query organizations on Satellite
+  tags: [always]
+  ansible.builtin.uri:
+    method: GET
+    url: "{{ satellite.server_url }}/api/organizations?per_page=all"
+    user: "{{ satellite.admin.username }}"
+    password: "{{ satellite.admin.password }}"
+    validate_certs: "{{ satellite.validate_certs }}"
+    force_basic_auth: true
+    return_content: true
+    timeout: 1200
+  register: __integration_organizations_api
+
+- name: Query domains on Satellite
+  tags: [always]
+  ansible.builtin.uri:
+    method: GET
+    url: "{{ satellite.server_url }}/api/domains?per_page=all"
+    user: "{{ satellite.admin.username }}"
+    password: "{{ satellite.admin.password }}"
+    validate_certs: "{{ satellite.validate_certs }}"
+    force_basic_auth: true
+    return_content: true
+    timeout: 1200
+  register: __integration_domains_api
+
+- name: Query locations on Satellite
+  tags: [always]
+  ansible.builtin.uri:
+    method: GET
+    url: "{{ satellite.server_url }}/api/locations?per_page=all"
+    user: "{{ satellite.admin.username }}"
+    password: "{{ satellite.admin.password }}"
+    validate_certs: "{{ satellite.validate_certs }}"
+    force_basic_auth: true
+    return_content: true
+    timeout: 1200
+  register: __integration_locations_api
+
+- name: Query host groups on Satellite
+  tags: [always]
+  ansible.builtin.uri:
+    method: GET
+    url: "{{ satellite.server_url }}/api/hostgroups?per_page=all"
+    user: "{{ satellite.admin.username }}"
+    password: "{{ satellite.admin.password }}"
+    validate_certs: "{{ satellite.validate_certs }}"
+    force_basic_auth: true
+    return_content: true
+    timeout: 1200
+  register: __integration_hostgroups_api
+
+- name: Query subnets on Satellite
+  tags: [always]
+  ansible.builtin.uri:
+    method: GET
+    url: "{{ satellite.server_url }}/api/subnets?per_page=all"
+    user: "{{ satellite.admin.username }}"
+    password: "{{ satellite.admin.password }}"
+    validate_certs: "{{ satellite.validate_certs }}"
+    force_basic_auth: true
+    return_content: true
+    timeout: 1200
+  register: __integration_subnets_api
+
+- name: Query users on Satellite
+  tags: [always]
+  ansible.builtin.uri:
+    method: GET
+    url: "{{ satellite.server_url }}/api/users?per_page=all"
+    user: "{{ satellite.admin.username }}"
+    password: "{{ satellite.admin.password }}"
+    validate_certs: "{{ satellite.validate_certs }}"
+    force_basic_auth: true
+    return_content: true
+    timeout: 1200
+  register: __integration_users_api
+
+- name: Query settings on Satellite
+  tags: [always]
+  ansible.builtin.uri:
+    method: GET
+    url: "{{ satellite.server_url }}/api/settings?per_page=all"
+    user: "{{ satellite.admin.username }}"
+    password: "{{ satellite.admin.password }}"
+    validate_certs: "{{ satellite.validate_certs }}"
+    force_basic_auth: true
+    return_content: true
+    timeout: 1200
+  register: __integration_settings_api
+
+- name: Query roles on Satellite
+  tags: [always]
+  ansible.builtin.uri:
+    method: GET
+    url: "{{ satellite.server_url }}/api/roles?per_page=all"
+    user: "{{ satellite.admin.username }}"
+    password: "{{ satellite.admin.password }}"
+    validate_certs: "{{ satellite.validate_certs }}"
+    force_basic_auth: true
+    return_content: true
+    timeout: 1200
+  register: __integration_roles_api
+
+- name: Query repositories on Satellite
+  tags: [always]
+  ansible.builtin.uri:
+    method: GET
+    url: "{{ satellite.server_url }}/katello/api/repositories?full_result=true"
+    user: "{{ satellite.admin.username }}"
+    password: "{{ satellite.admin.password }}"
+    validate_certs: "{{ satellite.validate_certs }}"
+    force_basic_auth: true
+    return_content: true
+    timeout: 1200
+  register: __integration_repositories_api
+
+- name: Resolve primary organization fixture
+  tags: [always]
+  ansible.builtin.set_fact:
+    __integration_filter_org: >-
+      {{
+        lookup('env', 'SATELLITE_EXPORT_FILTER_ORGANIZATION')
+        | default(
+            (
+              __integration_organizations_api.json.results
+              | default([])
+              | map(attribute='name')
+              | reject('equalto', 'Default Organization')
+              | list
+              | first
+            )
+            | default(
+                (
+                  __integration_organizations_api.json.results
+                  | default([])
+                  | map(attribute='name')
+                  | list
+                  | first
+                ),
+                true
+              ),
+            true
+          )
+      }}
+    __integration_exclude_org: >-
+      {{
+        (
+          __integration_organizations_api.json.results
+          | default([])
+          | map(attribute='name')
+          | reject('equalto', __integration_filter_org)
+          | list
+          | first
+        )
+        | default('', true)
+      }}
+    __integration_org_id: >-
+      {{
+        (
+          __integration_organizations_api.json.results
+          | default([])
+          | selectattr('name', 'equalto', __integration_filter_org)
+          | map(attribute='id')
+          | list
+          | first
+        )
+        | default('', true)
+      }}
+
+- name: Query Katello fixtures for primary organization
+  tags: [always]
+  when: __integration_org_id | default('') | length > 0
+  block:
+    - name: Query products on Satellite
+      tags: [always]
+      ansible.builtin.uri:
+        method: GET
+        url: >-
+          {{ satellite.server_url }}/katello/api/products?organization_id={{
+            __integration_org_id
+          }}&full_result=true
+        user: "{{ satellite.admin.username }}"
+        password: "{{ satellite.admin.password }}"
+        validate_certs: "{{ satellite.validate_certs }}"
+        force_basic_auth: true
+        return_content: true
+        timeout: 1200
+      register: __integration_products_api
+
+    - name: Query lifecycle environments on Satellite
+      tags: [always]
+      ansible.builtin.uri:
+        method: GET
+        url: >-
+          {{ satellite.server_url }}/katello/api/environments?organization_id={{
+            __integration_org_id
+          }}&full_result=true
+        user: "{{ satellite.admin.username }}"
+        password: "{{ satellite.admin.password }}"
+        validate_certs: "{{ satellite.validate_certs }}"
+        force_basic_auth: true
+        return_content: true
+        timeout: 1200
+      register: __integration_lifecycle_environments_api
+
+    - name: Query content views on Satellite
+      tags: [always]
+      ansible.builtin.uri:
+        method: GET
+        url: >-
+          {{ satellite.server_url }}/katello/api/content_views?organization_id={{
+            __integration_org_id
+          }}&full_result=true
+        user: "{{ satellite.admin.username }}"
+        password: "{{ satellite.admin.password }}"
+        validate_certs: "{{ satellite.validate_certs }}"
+        force_basic_auth: true
+        return_content: true
+        timeout: 1200
+      register: __integration_content_views_api
+
+    - name: Query repository sets on Satellite
+      tags: [always]
+      ansible.builtin.uri:
+        method: GET
+        url: >-
+          {{ satellite.server_url }}/katello/api/repository_sets?organization_id={{
+            __integration_org_id
+          }}&full_result=true
+        user: "{{ satellite.admin.username }}"
+        password: "{{ satellite.admin.password }}"
+        validate_certs: "{{ satellite.validate_certs }}"
+        force_basic_auth: true
+        return_content: true
+        timeout: 1200
+      register: __integration_repository_sets_api
+
+- name: Resolve Katello content fixtures
+  tags: [always]
+  when: __integration_org_id | default('') | length > 0
+  ansible.builtin.set_fact:
+    __integration_filter_product_name: >-
+      {{
+        (
+          __integration_products_api.json.results
+          | default([])
+          | rejectattr('name', 'equalto', 'Red Hat Enterprise Linux')
+          | map(attribute='name')
+          | list
+          | first
+        )
+        | default('', true)
+      }}
+    __integration_exclude_product_name: >-
+      {{
+        (
+          __integration_products_api.json.results
+          | default([])
+          | map(attribute='name')
+          | reject('equalto', __integration_filter_product_name | default(''))
+          | list
+          | first
+        )
+        | default('', true)
+      }}
+    __integration_filter_lifecycle_environment_name: >-
+      {{
+        (
+          __integration_lifecycle_environments_api.json.results
+          | default([])
+          | rejectattr('name', 'equalto', 'Library')
+          | map(attribute='name')
+          | list
+          | first
+        )
+        | default('', true)
+      }}
+    __integration_exclude_lifecycle_environment_name: >-
+      {{
+        (
+          __integration_lifecycle_environments_api.json.results
+          | default([])
+          | rejectattr('name', 'equalto', 'Library')
+          | map(attribute='name')
+          | reject('equalto', __integration_filter_lifecycle_environment_name | default(''))
+          | list
+          | first
+        )
+        | default('', true)
+      }}
+    __integration_filter_content_view_name: >-
+      {{
+        (
+          __integration_content_views_api.json.results
+          | default([])
+          | map(attribute='name')
+          | list
+          | first
+        )
+        | default('', true)
+      }}
+    __integration_exclude_content_view_name: >-
+      {{
+        (
+          __integration_content_views_api.json.results
+          | default([])
+          | map(attribute='name')
+          | reject('equalto', __integration_filter_content_view_name | default(''))
+          | list
+          | first
+        )
+        | default('', true)
+      }}
+    __integration_repository_sets_enabled_count: >-
+      {{
+        __integration_repository_sets_api.json.results
+        | default([])
+        | selectattr('enabled', 'defined')
+        | selectattr('enabled')
+        | list
+        | length
+      }}
+    __integration_repository_sets_disabled_count: >-
+      {{
+        __integration_repository_sets_api.json.results
+        | default([])
+        | selectattr('enabled', 'defined')
+        | rejectattr('enabled')
+        | list
+        | length
+      }}
+
+- name: Resolve domain and location fixtures
+  tags: [always]
+  ansible.builtin.set_fact:
+    __integration_filter_domain_name: >-
+      {{
+        lookup('env', 'SATELLITE_EXPORT_FILTER_DOMAIN_NAME')
+        | default(
+            (
+              __integration_domains_api.json.results
+              | default([])
+              | map(attribute='name')
+              | list
+              | first
+            ),
+            true
+          )
+      }}
+    __integration_exclude_domain_name: >-
+      {{
+        (
+          __integration_domains_api.json.results
+          | default([])
+          | map(attribute='name')
+          | reject('equalto', __integration_filter_domain_name | default(''))
+          | list
+          | first
+        )
+        | default('', true)
+      }}
+    __integration_filter_location_name: >-
+      {{
+        lookup('env', 'SATELLITE_EXPORT_FILTER_LOCATION')
+        | default(
+            (
+              __integration_locations_api.json.results
+              | default([])
+              | map(attribute='name')
+              | list
+              | first
+            ),
+            true
+          )
+      }}
+    __integration_exclude_location_name: >-
+      {{
+        (
+          __integration_locations_api.json.results
+          | default([])
+          | map(attribute='name')
+          | reject('equalto', __integration_filter_location_name | default(''))
+          | list
+          | first
+        )
+        | default('', true)
+      }}
+    __integration_hostgroup_parent_title: >-
+      {{
+        (
+          __integration_hostgroups_api.json.results
+          | default([])
+          | selectattr('title', 'defined')
+          | map(attribute='title')
+          | select('search', '/')
+          | list
+          | first
+        )
+        | default('', true)
+      }}
+    __integration_hostgroup_parent_root: >-
+      {{
+        (__integration_hostgroup_parent_title.split('/')[0])
+        if (__integration_hostgroup_parent_title | default('') | length > 0)
+        else ''
+      }}
+    __integration_repositories_api_clean: >-
+      {{
+        __integration_repositories_api.json.results
+        | default([])
+        | rejectattr('url', 'search', satellite_redhat_repository_url_substring)
+        | infra.satellite_configuration.satellite_configuration_reject_orphaned_katello_products
+        | list
+      }}
+    __integration_settings_api_clean: >-
+      {{
+        __integration_settings_api.json.results
+        | default([])
+        | rejectattr('readonly', 'equalto', true)
+        | rejectattr('readonly', 'equalto', 1)
+        | list
+      }}
+    __integration_filter_setting_name: >-
+      {{
+        (
+          __integration_settings_api_clean
+          | map(attribute='name')
+          | list
+          | first
+        )
+        | default('', true)
+      }}
+    __integration_admin_user_login: >-
+      {{
+        (
+          __integration_users_api.json.results
+          | default([])
+          | selectattr('admin', 'defined')
+          | selectattr('admin')
+          | map(attribute='login')
+          | list
+          | first
+        )
+        | default('admin', true)
+      }}
+
+...

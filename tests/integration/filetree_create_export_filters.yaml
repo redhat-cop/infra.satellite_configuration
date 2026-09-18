@@ -1,0 +1,239 @@
+---
+# Live-Satellite integration tests for filetree_create export scope filters and reconcile symmetry.
+#
+# Requires SATELLITE_SERVER_URL, SATELLITE_USERNAME, and SATELLITE_PASSWORD
+# (or pass a full satellite dict with -e).
+#
+# Optional environment variables:
+#   SATELLITE_VALIDATE_CERTS
+#   SATELLITE_CONFIGURATION_FILETREE_PATH
+#   SATELLITE_EXPORT_FILTER_ORGANIZATION
+#   SATELLITE_EXPORT_FILTER_DOMAIN_NAME
+#   SATELLITE_EXPORT_FILTER_LOCATION
+#
+# filetree_create / filetree_reconcile run via play-level import_role (no tags on import),
+# matching playbooks/run_filetree_create.yaml. CLI --tags select test case and object blocks.
+# Use tests/integration/run_integration_tests.sh for the full suite.
+#
+# Examples:
+#   tests/integration/run_integration_tests.sh all
+#   ansible-playbook tests/integration/filetree_create_export_filters.yaml \
+#     --tags always,filter_organizations,organizations,yaml_format
+#   ansible-playbook tests/integration/filetree_create_export_filters.yaml \
+#     --tags always,reconcile,reconcile_cac_out_of_scope,organizations,yaml_format,compare
+- name: Integration test filetree_create export scope filters and reconcile symmetry
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  collections:
+    - infra.satellite_configuration
+  vars:
+    satellite_configuration_filetree_path: >-
+      {{
+        lookup('env', 'SATELLITE_CONFIGURATION_FILETREE_PATH')
+        | default('/tmp/satellite_filetree_export_filters_integration', true)
+      }}
+    __integration_organizations_export_path: >-
+      {{ satellite_configuration_filetree_path }}/satellite_organizations.d/satellite_organizations.yaml
+    __integration_domains_export_path: >-
+      {{ satellite_configuration_filetree_path }}/satellite_domains.d/satellite_domains.yaml
+    __integration_reconcile_cac_path: "{{ satellite_configuration_filetree_path }}/.integration_reconcile_cac"
+    __integration_reconcile_live_path: "{{ satellite_configuration_filetree_path }}/.integration_reconcile_live"
+    __integration_reconcile_diff_path: "{{ satellite_configuration_filetree_path }}/.integration_reconcile_diff"
+    __integration_reconcile_apply_scope_filters: true
+    __integration_reconcile_case_tags:
+      - reconcile
+      - reconcile_cac_out_of_scope
+      - reconcile_live_out_of_scope
+      - reconcile_unscoped_legacy
+      - reconcile_domains_scope
+    __integration_reconcile_export_case_tags:
+      - reconcile_cac_out_of_scope
+      - reconcile_domains_scope
+    __integration_export_api_index_paths:
+      domains: /api/domains?per_page=all
+      subnets: /api/subnets?per_page=all
+      hostgroups: /api/hostgroups?per_page=all
+      repositories: /katello/api/repositories?full_result=true
+      lifecycle_environments: /katello/api/environments?full_result=true
+      content_views: /katello/api/content_views?full_result=true
+      users: /api/users?per_page=all
+      settings: /api/settings?per_page=all
+    # Keep test-playbook tags out of ansible_run_tags object-type scoping in filetree_reconcile.
+    satellite_configuration_filetree_reconcile_meta_tags:
+      - apply
+      - export
+      - compare
+      - always
+      - reconcile
+      - filter
+      - yaml_format
+      - vault_template
+      - reconcile_cac_out_of_scope
+      - reconcile_live_out_of_scope
+      - reconcile_unscoped_legacy
+      - reconcile_domains_scope
+      - filter_organizations
+      - filter_organizations_repositories
+      - filter_organizations_exclude
+      - filter_name_include
+      - filter_name_exclude
+      - filter_name_use_regex
+      - filter_locations
+      - filter_locations_exclude
+      - filter_domains
+      - filter_domains_exclude
+      - filter_hostgroup_parents
+      - filter_products
+      - filter_products_exclude
+      - filter_lifecycle_environments
+      - filter_lifecycle_environments_exclude
+      - filter_content_views
+      - filter_content_views_exclude
+      - filter_labels
+      - filter_labels_exclude
+      - filter_repository_sets_only_enabled
+      - filter_auth_sources
+      - filter_auth_sources_exclude
+      - filter_users_admin
+      - filter_settings_include
+      - filter_settings_exclude
+      - filter_roles_include_builtin
+      - filter_roles_include_locked
+      - filter_search
+      - filter_search_by_type
+  tasks:
+    - name: Build Satellite connection from environment when satellite is not passed
+      tags: [always]
+      ansible.builtin.set_fact:
+        satellite: >-
+          {{
+            {
+              'server_url': lookup('env', 'SATELLITE_SERVER_URL'),
+              'validate_certs': lookup('env', 'SATELLITE_VALIDATE_CERTS') | default('true') | bool,
+              'admin': {
+                'username': lookup('env', 'SATELLITE_USERNAME'),
+                'password': lookup('env', 'SATELLITE_PASSWORD'),
+              },
+              'template': {'mode': '0644'},
+            }
+          }}
+      when: satellite is not defined
+
+    - name: Require Satellite connection variables
+      tags: [always]
+      ansible.builtin.assert:
+        that:
+          - satellite.server_url | default('') | length > 0
+          - satellite.admin.username | default('') | length > 0
+          - satellite.admin.password | default('') | length > 0
+        fail_msg: >-
+          Set SATELLITE_SERVER_URL, SATELLITE_USERNAME, and SATELLITE_PASSWORD
+          (or pass a full satellite dict with -e).
+
+    - name: Reset integration export tree before scoped export
+      tags: [always]
+      ansible.builtin.file:
+        path: "{{ satellite_configuration_filetree_path }}"
+        state: absent
+
+    - name: Ensure integration export directory exists
+      tags: [always]
+      ansible.builtin.file:
+        path: "{{ satellite_configuration_filetree_path }}"
+        state: directory
+        mode: "0755"
+
+    - name: Load collection global defaults
+      ansible.builtin.import_role:
+        name: infra.satellite_configuration.global_vars
+
+    - name: Resolve Satellite connection from satellite_source
+      tags: [always]
+      ansible.builtin.set_fact:
+        satellite: "{{ satellite_source }}"
+      when: satellite_source is defined
+
+    - name: Initialize integration export filter baselines
+      tags: [always]
+      ansible.builtin.set_fact:
+        __integration_export_filters_baseline: "{{ satellite_configuration_filetree_create_filters }}"
+        __integration_export_filters: "{{ satellite_configuration_filetree_create_filters }}"
+
+    - name: Discover Satellite fixtures for filter tests
+      tags: [always]
+      ansible.builtin.include_tasks: tasks/export_filters/discover_fixtures.yaml
+
+    - name: Require at least one organization on Satellite
+      tags: [always]
+      ansible.builtin.assert:
+        that:
+          - __integration_filter_org | default('') | length > 0
+        fail_msg: Satellite returned no organizations for export filter integration tests.
+
+    - name: Configure filter scope for active tests
+      tags: [always]
+      ansible.builtin.include_tasks: tasks/export_filters/configure_filter_tests.yaml
+
+    - name: Export Satellite configuration via filetree_create
+      ansible.builtin.import_role:
+        name: infra.satellite_configuration.filetree_create
+      vars:
+        output_path: "{{ satellite_configuration_filetree_path }}"
+        satellite_configuration_filetree_create_filters: "{{ __integration_export_filters }}"
+
+    - name: Filter roles_include_builtin | Prepare second export after default role pass
+      tags: [always]
+      ansible.builtin.include_tasks: tasks/export_filters/roles_builtin_second_export.yaml
+
+    - name: Export roles with built-in opt-in via filetree_create
+      when: "'filter_roles_include_builtin' in ansible_run_tags"
+      ansible.builtin.import_role:
+        name: infra.satellite_configuration.filetree_create
+      vars:
+        output_path: "{{ satellite_configuration_filetree_path }}"
+        satellite_configuration_filetree_create_filters: "{{ __integration_export_filters }}"
+
+    - name: Assert filter export results for active tests
+      tags: [always]
+      ansible.builtin.include_tasks: tasks/export_filters/assert_filter_tests.yaml
+
+    - name: Prepare reconcile fixtures for active tests
+      tags: [always]
+      ansible.builtin.include_tasks: tasks/reconcile_scope/prepare_reconcile_tests.yaml
+
+    - name: Export live configuration for reconcile tests via filetree_create
+      when: >-
+        ansible_run_tags | intersect(__integration_reconcile_export_case_tags) | length > 0
+      ansible.builtin.import_role:
+        name: infra.satellite_configuration.filetree_create
+      vars:
+        output_path: "{{ satellite_configuration_filetree_path }}"
+        satellite_configuration_filetree_create_filters: "{{ __integration_export_filters }}"
+
+    - name: Finalize reconcile fixtures after live export
+      tags: [always]
+      ansible.builtin.include_tasks: tasks/reconcile_scope/finalize_reconcile_tests.yaml
+
+    - name: Compare CaC and live configuration via filetree_reconcile
+      when: >-
+        ansible_run_tags | intersect(__integration_reconcile_case_tags) | length > 0
+      ansible.builtin.import_role:
+        name: infra.satellite_configuration.filetree_reconcile
+      vars:
+        satellite_configuration_filetree_reconcile_cac_path: "{{ __integration_reconcile_cac_path }}"
+        satellite_configuration_filetree_reconcile_live_path: "{{ __integration_reconcile_live_path }}"
+        satellite_configuration_filetree_reconcile_diff_path: "{{ __integration_reconcile_diff_path }}"
+        satellite_configuration_filetree_reconcile_apply_scope_filters: >-
+          {{ __integration_reconcile_apply_scope_filters | default(true) | bool }}
+        satellite_configuration_filetree_reconcile_filters: >-
+          {{
+            __integration_reconcile_scope_filters
+            | default(__integration_export_filters)
+          }}
+
+    - name: Assert reconcile diff results for active tests
+      tags: [always]
+      ansible.builtin.include_tasks: tasks/reconcile_scope/assert_reconcile_tests.yaml
+
+...

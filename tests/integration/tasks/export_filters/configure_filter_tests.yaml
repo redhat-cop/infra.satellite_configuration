@@ -1,0 +1,615 @@
+---
+# Per-filter live Satellite export tests. Each case needs CLI --tags, for example:
+#   --tags always,filter_organizations,organizations,yaml_format
+# Use tests/integration/run_integration_tests.sh filters for the full suite.
+
+- name: Filter organizations | Run export scope test
+  when: __integration_filter_org | default('') | length > 0
+  tags:
+    - filter
+    - filter_organizations
+  block:
+    - name: Filter organizations | Reset working filters
+      ansible.builtin.include_tasks: reset_filters.yaml
+
+    - name: Filter organizations | Apply allow-list
+      ansible.builtin.set_fact:
+        __integration_export_filters: >-
+          {{
+            __integration_export_filters
+            | combine({'organizations': [__integration_filter_org]}, recursive=True)
+          }}
+
+- name: Filter organizations on repositories | Run export scope test
+  when: __integration_filter_org | default('') | length > 0
+  tags:
+    - filter
+    - filter_organizations_repositories
+  block:
+    - name: Filter organizations on repositories | Reset working filters
+      ansible.builtin.include_tasks: reset_filters.yaml
+
+    - name: Filter organizations on repositories | Apply organization allow-list
+      ansible.builtin.set_fact:
+        __integration_export_filters: >-
+          {{
+            __integration_export_filters
+            | combine({'organizations': [__integration_filter_org]}, recursive=True)
+          }}
+
+- name: Filter organizations_exclude | Run export scope test
+  when: __integration_exclude_org | default('') | length > 0
+  tags:
+    - filter
+    - filter_organizations_exclude
+  block:
+    - name: Filter organizations_exclude | Reset working filters
+      ansible.builtin.include_tasks: reset_filters.yaml
+
+    - name: Filter organizations_exclude | Apply deny-list
+      ansible.builtin.set_fact:
+        __integration_export_filters: >-
+          {{
+            __integration_export_filters
+            | combine({'organizations_exclude': [__integration_exclude_org]}, recursive=True)
+          }}
+
+- name: Filter name_include | Run export scope test
+  when: __integration_filter_domain_name | default('') | length > 0
+  tags:
+    - filter
+    - filter_name_include
+  block:
+    - name: Filter name_include | Reset working filters
+      ansible.builtin.include_tasks: reset_filters.yaml
+
+    - name: Filter name_include | Apply name allow-list
+      ansible.builtin.set_fact:
+        __integration_export_filters: >-
+          {{
+            __integration_export_filters
+            | combine({'name_include': [__integration_filter_domain_name]}, recursive=True)
+          }}
+
+- name: Filter name_exclude | Run export scope test
+  when: __integration_exclude_domain_name | default('') | length > 0
+  tags:
+    - filter
+    - filter_name_exclude
+  block:
+    - name: Filter name_exclude | Reset working filters
+      ansible.builtin.include_tasks: reset_filters.yaml
+
+    - name: Filter name_exclude | Apply name deny-list
+      ansible.builtin.set_fact:
+        __integration_export_filters: >-
+          {{
+            __integration_export_filters
+            | combine({'name_exclude': [__integration_exclude_domain_name]}, recursive=True)
+          }}
+
+- name: Filter name_use_regex | Run export scope test
+  when: __integration_filter_domain_name | default('') | length > 0
+  tags:
+    - filter
+    - filter_name_use_regex
+  block:
+    - name: Filter name_use_regex | Reset working filters
+      ansible.builtin.include_tasks: reset_filters.yaml
+
+    - name: Filter name_use_regex | Apply regex name filter
+      ansible.builtin.set_fact:
+        __integration_export_filters: >-
+          {{
+            __integration_export_filters
+            | combine(
+                {
+                  'name_include': ['^' ~ (__integration_filter_domain_name | regex_escape) ~ '$'],
+                  'name_use_regex': true,
+                },
+                recursive=True
+              )
+          }}
+
+- name: Filter locations | Run export scope test
+  when: __integration_filter_location_name | default('') | length > 0
+  tags:
+    - filter
+    - filter_locations
+  block:
+    - name: Filter locations | Reset working filters
+      ansible.builtin.include_tasks: reset_filters.yaml
+
+    - name: Filter locations | Apply location allow-list
+      ansible.builtin.set_fact:
+        __integration_export_filters: >-
+          {{
+            __integration_export_filters
+            | combine({'locations': [__integration_filter_location_name]}, recursive=True)
+          }}
+
+- name: Filter locations_exclude | Run export scope test
+  when: __integration_exclude_location_name | default('') | length > 0
+  tags:
+    - filter
+    - filter_locations_exclude
+  block:
+    - name: Filter locations_exclude | Reset working filters
+      ansible.builtin.include_tasks: reset_filters.yaml
+
+    - name: Filter locations_exclude | Apply location deny-list
+      ansible.builtin.set_fact:
+        __integration_export_filters: >-
+          {{
+            __integration_export_filters
+            | combine({'locations_exclude': [__integration_exclude_location_name]}, recursive=True)
+          }}
+
+- name: Filter domains | Run export scope test
+  when: __integration_filter_domain_name | default('') | length > 0
+  tags:
+    - filter
+    - filter_domains
+  block:
+    - name: Filter domains | Reset working filters
+      ansible.builtin.include_tasks: reset_filters.yaml
+
+    - name: Filter domains | Apply domain allow-list
+      ansible.builtin.set_fact:
+        __integration_export_filters: >-
+          {{
+            __integration_export_filters
+            | combine({'domains': [__integration_filter_domain_name]}, recursive=True)
+          }}
+
+- name: Filter domains_exclude | Run export scope test
+  when: __integration_exclude_domain_name | default('') | length > 0
+  tags:
+    - filter
+    - filter_domains_exclude
+  block:
+    - name: Filter domains_exclude | Reset working filters
+      ansible.builtin.include_tasks: reset_filters.yaml
+
+    - name: Filter domains_exclude | Apply domain deny-list
+      ansible.builtin.set_fact:
+        __integration_export_filters: >-
+          {{
+            __integration_export_filters
+            | combine({'domains_exclude': [__integration_exclude_domain_name]}, recursive=True)
+          }}
+
+- name: Filter hostgroup_parents | Run export scope test
+  when: __integration_hostgroup_parent_root | default('') | length > 0
+  tags:
+    - filter
+    - filter_hostgroup_parents
+  block:
+    - name: Filter hostgroup_parents | Reset working filters
+      ansible.builtin.include_tasks: reset_filters.yaml
+
+    - name: Filter hostgroup_parents | Apply parent branch filter
+      ansible.builtin.set_fact:
+        __integration_export_filters: >-
+          {{
+            __integration_export_filters
+            | combine({'hostgroup_parents': [__integration_hostgroup_parent_root]}, recursive=True)
+          }}
+
+- name: Filter products | Run export scope test
+  when: __integration_filter_product_name | default('') | length > 0
+  tags:
+    - filter
+    - filter_products
+  block:
+    - name: Filter products | Reset working filters
+      ansible.builtin.include_tasks: reset_filters.yaml
+
+    - name: Filter products | Apply product allow-list
+      ansible.builtin.set_fact:
+        __integration_export_filters: >-
+          {{
+            __integration_export_filters
+            | combine({'products': [__integration_filter_product_name]}, recursive=True)
+          }}
+
+- name: Filter products_exclude | Run export scope test
+  when: __integration_exclude_product_name | default('') | length > 0
+  tags:
+    - filter
+    - filter_products_exclude
+  block:
+    - name: Filter products_exclude | Reset working filters
+      ansible.builtin.include_tasks: reset_filters.yaml
+
+    - name: Filter products_exclude | Apply product deny-list
+      ansible.builtin.set_fact:
+        __integration_export_filters: >-
+          {{
+            __integration_export_filters
+            | combine({'products_exclude': [__integration_exclude_product_name]}, recursive=True)
+          }}
+
+- name: Filter lifecycle_environments | Run export scope test
+  when: __integration_filter_lifecycle_environment_name | default('') | length > 0
+  tags:
+    - filter
+    - filter_lifecycle_environments
+  block:
+    - name: Filter lifecycle_environments | Reset working filters
+      ansible.builtin.include_tasks: reset_filters.yaml
+
+    - name: Filter lifecycle_environments | Apply lifecycle allow-list
+      ansible.builtin.set_fact:
+        __integration_export_filters: >-
+          {{
+            __integration_export_filters
+            | combine(
+                {'lifecycle_environments': [__integration_filter_lifecycle_environment_name]},
+                recursive=True
+              )
+          }}
+
+- name: Filter lifecycle_environments_exclude | Run export scope test
+  when: __integration_exclude_lifecycle_environment_name | default('') | length > 0
+  tags:
+    - filter
+    - filter_lifecycle_environments_exclude
+  block:
+    - name: Filter lifecycle_environments_exclude | Reset working filters
+      ansible.builtin.include_tasks: reset_filters.yaml
+
+    - name: Filter lifecycle_environments_exclude | Apply lifecycle deny-list
+      ansible.builtin.set_fact:
+        __integration_export_filters: >-
+          {{
+            __integration_export_filters
+            | combine(
+                {
+                  'lifecycle_environments_exclude': [
+                    __integration_exclude_lifecycle_environment_name
+                  ],
+                },
+                recursive=True
+              )
+          }}
+
+- name: Filter content_views | Run export scope test
+  when: __integration_filter_content_view_name | default('') | length > 0
+  tags:
+    - filter
+    - filter_content_views
+  block:
+    - name: Filter content_views | Reset working filters
+      ansible.builtin.include_tasks: reset_filters.yaml
+
+    - name: Filter content_views | Apply content view allow-list
+      ansible.builtin.set_fact:
+        __integration_export_filters: >-
+          {{
+            __integration_export_filters
+            | combine({'content_views': [__integration_filter_content_view_name]}, recursive=True)
+          }}
+
+- name: Filter content_views_exclude | Run export scope test
+  when: __integration_exclude_content_view_name | default('') | length > 0
+  tags:
+    - filter
+    - filter_content_views_exclude
+  block:
+    - name: Filter content_views_exclude | Reset working filters
+      ansible.builtin.include_tasks: reset_filters.yaml
+
+    - name: Filter content_views_exclude | Apply content view deny-list
+      ansible.builtin.set_fact:
+        __integration_export_filters: >-
+          {{
+            __integration_export_filters
+            | combine(
+                {'content_views_exclude': [__integration_exclude_content_view_name]},
+                recursive=True
+              )
+          }}
+
+- name: Filter labels | Resolve repository label fixture
+  ansible.builtin.set_fact:
+    __integration_filter_label_name: >-
+      {{
+        (
+          __integration_repositories_api_clean
+          | selectattr('label', 'defined')
+          | rejectattr('label', 'equalto', '')
+          | map(attribute='label')
+          | list
+          | first
+        )
+        | default(
+            (
+              __integration_repositories_api_clean
+              | selectattr('content_label', 'defined')
+              | rejectattr('content_label', 'equalto', '')
+              | map(attribute='content_label')
+              | list
+              | first
+            ),
+            true
+          )
+      }}
+  tags:
+    - filter
+    - filter_labels
+
+- name: Filter labels | Run export scope test
+  when: __integration_filter_label_name | default('') | length > 0
+  tags:
+    - filter
+    - filter_labels
+  block:
+    - name: Filter labels | Reset working filters
+      ansible.builtin.include_tasks: reset_filters.yaml
+
+    - name: Filter labels | Apply label allow-list
+      ansible.builtin.set_fact:
+        __integration_export_filters: >-
+          {{
+            __integration_export_filters
+            | combine({'labels': [__integration_filter_label_name]}, recursive=True)
+          }}
+
+- name: Filter labels_exclude | Resolve repository label fixture for exclude
+  ansible.builtin.set_fact:
+    __integration_exclude_label_name: >-
+      {{
+        (
+          __integration_repositories_api_clean
+          | selectattr('label', 'defined')
+          | map(attribute='label')
+          | reject('equalto', __integration_filter_label_name | default(''))
+          | reject('equalto', '')
+          | list
+          | first
+        )
+        | default(
+            (
+              __integration_repositories_api_clean
+              | selectattr('content_label', 'defined')
+              | map(attribute='content_label')
+              | reject('equalto', __integration_filter_label_name | default(''))
+              | reject('equalto', '')
+              | list
+              | first
+            ),
+            true
+          )
+      }}
+  tags:
+    - filter
+    - filter_labels_exclude
+
+- name: Filter labels_exclude | Run export scope test
+  when:
+    - __integration_filter_label_name | default('') | length > 0
+    - __integration_exclude_label_name | default('') | length > 0
+  tags:
+    - filter
+    - filter_labels_exclude
+  block:
+    - name: Filter labels_exclude | Reset working filters
+      ansible.builtin.include_tasks: reset_filters.yaml
+
+    - name: Filter labels_exclude | Apply label deny-list
+      ansible.builtin.set_fact:
+        __integration_export_filters: >-
+          {{
+            __integration_export_filters
+            | combine({'labels_exclude': [__integration_exclude_label_name]}, recursive=True)
+          }}
+
+- name: Filter repository_sets_only_enabled | Run export scope test
+  when: __integration_org_id | default('') | length > 0
+  tags:
+    - filter
+    - filter_repository_sets_only_enabled
+  block:
+    - name: Filter repository_sets_only_enabled | Reset working filters
+      ansible.builtin.include_tasks: reset_filters.yaml
+
+    - name: Filter repository_sets_only_enabled | Restrict to primary organization
+      ansible.builtin.set_fact:
+        __integration_export_filters: >-
+          {{
+            __integration_export_filters
+            | combine(
+                {
+                  'organizations': [__integration_filter_org],
+                  'repository_sets_only_enabled': true,
+                },
+                recursive=True
+              )
+          }}
+        __integration_repository_sets_expected_enabled_count: >-
+          {{
+            __integration_repository_sets_api.json.results
+            | default([])
+            | selectattr('enabled', 'defined')
+            | selectattr('enabled')
+            | list
+            | length
+          }}
+
+- name: Filter auth_sources | Run export scope test
+  when: __integration_admin_user_login | default('') | length > 0
+  tags:
+    - filter
+    - filter_auth_sources
+  block:
+    - name: Filter auth_sources | Reset working filters
+      ansible.builtin.include_tasks: reset_filters.yaml
+
+    - name: Filter auth_sources | Apply Internal auth source allow-list
+      ansible.builtin.set_fact:
+        __integration_export_filters: >-
+          {{
+            __integration_export_filters
+            | combine({'auth_sources': ['Internal']}, recursive=True)
+          }}
+
+- name: Filter auth_sources_exclude | Run export scope test
+  when: __integration_admin_user_login | default('') | length > 0
+  tags:
+    - filter
+    - filter_auth_sources_exclude
+  block:
+    - name: Filter auth_sources_exclude | Reset working filters
+      ansible.builtin.include_tasks: reset_filters.yaml
+
+    - name: Filter auth_sources_exclude | Exclude Internal auth source
+      ansible.builtin.set_fact:
+        __integration_export_filters: >-
+          {{
+            __integration_export_filters
+            | combine({'auth_sources_exclude': ['Internal']}, recursive=True)
+          }}
+
+- name: Filter users_admin | Run export scope test
+  when: __integration_admin_user_login | default('') | length > 0
+  tags:
+    - filter
+    - filter_users_admin
+  block:
+    - name: Filter users_admin | Reset working filters
+      ansible.builtin.include_tasks: reset_filters.yaml
+
+    - name: Filter users_admin | Export admin users only
+      ansible.builtin.set_fact:
+        __integration_export_filters: >-
+          {{
+            __integration_export_filters
+            | combine({'users_admin': true}, recursive=True)
+          }}
+
+- name: Filter settings_include | Run export scope test
+  when: __integration_filter_setting_name | default('') | length > 0
+  tags:
+    - filter
+    - filter_settings_include
+  block:
+    - name: Filter settings_include | Reset working filters
+      ansible.builtin.include_tasks: reset_filters.yaml
+
+    - name: Filter settings_include | Apply settings allow-list
+      ansible.builtin.set_fact:
+        __integration_export_filters: >-
+          {{
+            __integration_export_filters
+            | combine({'settings_include': [__integration_filter_setting_name]}, recursive=True)
+          }}
+
+- name: Filter settings_exclude | Run export scope test
+  when:
+    - __integration_filter_setting_name | default('') | length > 0
+    - (__integration_settings_api_clean | length) > 1
+  tags:
+    - filter
+    - filter_settings_exclude
+  block:
+    - name: Filter settings_exclude | Reset working filters
+      ansible.builtin.include_tasks: reset_filters.yaml
+
+    - name: Filter settings_exclude | Apply settings deny-list
+      ansible.builtin.set_fact:
+        __integration_settings_exclude_name: >-
+          {{
+            (
+              __integration_settings_api_clean
+              | map(attribute='name')
+              | reject('equalto', __integration_filter_setting_name)
+              | list
+              | first
+            )
+          }}
+        __integration_export_filters: >-
+          {{
+            __integration_export_filters
+            | combine(
+                {'settings_exclude': [__integration_settings_exclude_name]},
+                recursive=True
+              )
+          }}
+
+- name: Filter roles_include_builtin | Run export scope test
+  tags:
+    - filter
+    - filter_roles_include_builtin
+  block:
+    - name: Filter roles_include_builtin | Reset working filters
+      ansible.builtin.include_tasks: reset_filters.yaml
+
+- name: Filter roles_include_locked | Run export scope test
+  tags:
+    - filter
+    - filter_roles_include_locked
+  block:
+    - name: Filter roles_include_locked | Reset working filters
+      ansible.builtin.include_tasks: reset_filters.yaml
+
+    - name: Filter roles_include_locked | Opt in to locked roles
+      ansible.builtin.set_fact:
+        __integration_export_filters: >-
+          {{
+            __integration_export_filters
+            | combine(
+                {
+                  'roles_include_builtin': true,
+                  'roles_include_locked': true,
+                },
+                recursive=True
+              )
+          }}
+
+- name: Filter search | Run export scope test
+  when: __integration_filter_domain_name | default('') | length > 0
+  tags:
+    - filter
+    - filter_search
+  block:
+    - name: Filter search | Reset working filters
+      ansible.builtin.include_tasks: reset_filters.yaml
+
+    - name: Filter search | Apply global scoped_search fragment
+      ansible.builtin.set_fact:
+        __integration_export_filters: >-
+          {{
+            __integration_export_filters
+            | combine(
+                {
+                  'search': 'name = "' ~ __integration_filter_domain_name ~ '"',
+                },
+                recursive=True
+              )
+          }}
+
+- name: Filter search_by_type | Run export scope test
+  when: __integration_filter_domain_name | default('') | length > 0
+  tags:
+    - filter
+    - filter_search_by_type
+  block:
+    - name: Filter search_by_type | Reset working filters
+      ansible.builtin.include_tasks: reset_filters.yaml
+
+    - name: Filter search_by_type | Apply per-type scoped_search fragment
+      ansible.builtin.set_fact:
+        __integration_export_filters: >-
+          {{
+            __integration_export_filters
+            | combine(
+                {
+                  'search_by_type': {
+                    'domains': 'name = "' ~ __integration_filter_domain_name ~ '"',
+                  },
+                },
+                recursive=True
+              )
+          }}
+...

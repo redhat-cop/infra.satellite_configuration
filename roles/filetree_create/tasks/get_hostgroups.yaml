@@ -7,11 +7,30 @@
   ansible.builtin.include_tasks: api_call.yaml
   vars:
     call_type: Host Groups
-    api_link: /api/hostgroups?per_page=all
+    api_link: >-
+      {{
+        '/api/hostgroups?per_page=all'
+        | infra.satellite_configuration.satellite_configuration_append_export_search_for_resource(
+            satellite_configuration_filetree_create_filters,
+            'hostgroups'
+          )
+      }}
 
 - name: Host Groups | Create a List
   ansible.builtin.set_fact:
-    all_results: "{{ result_api_response.json.results | sort(attribute='id') }}"
+    all_results: >-
+      {{
+        result_api_response.json.results
+        | infra.satellite_configuration.satellite_configuration_filter_export_items(
+            satellite_configuration_filetree_create_filters
+            | infra.satellite_configuration.satellite_configuration_filters_for_post_api_export(
+                'hostgroups'
+              ),
+            'name',
+            true
+          )
+        | sort(attribute='id')
+      }}
 
 - name: Host Groups | Get Detailed Info
   ansible.builtin.include_tasks: detailed_api_call.yaml
@@ -31,7 +50,8 @@
 - name: Host Groups | Template Out Results
   when:
     - detailed_info is defined
-    - detailed_info | length > 0
+    - detailed_info.results is defined
+    - detailed_info.results | length > 0
   ansible.builtin.include_tasks: template_out.yaml
   vars:
     template_type: satellite_hostgroups
