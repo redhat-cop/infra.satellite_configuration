@@ -69,14 +69,14 @@ repos:
         args: [--config=.black.cfg, --check, --diff]
         files: ^(plugins|tests/unit)/.*\.py$
   - repo: https://github.com/pycqa/flake8
-    rev: 7.4.0
+    rev: 7.4.1
     hooks:
       - id: flake8
         name: flake8
         entry: flake8
         types: [python]
   - repo: https://github.com/pycqa/pylint
-    rev: v4.0.8
+    rev: v4.0.9
     hooks:
       - id: pylint
         name: pylint
