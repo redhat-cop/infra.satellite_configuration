@@ -28,13 +28,20 @@
     __addapted_filter_info:
       filters: "{{ (__addapted_filter_info.filters | default([])) + [__current_rule] }}"
   vars:
+    # Rule .name is absent for erratum (and similar) rules; use bracket access so
+    # default(None) works. Template discard_unwanted_fields strips None/empty.
     __current_rule:
       name: "{{ __current_filter[0].name }}"
       inclusion: "{{ __current_filter[0].inclusion }}"
-      description: "{{ __current_filter[0].description }}"
+      description: "{{ __current_filter[0].description | default(None) }}"
       filter_state: "{{ __current_filter[0].state | default('present') }}"
       filter_type: "{{ __current_filter[0].type }}"
-      rule_name: "{{ __current_filter[1].name }}"
+      rule_name: "{{ __current_filter[1]['name'] | default(None) }}"
+      date_type: "{{ __current_filter[1]['date_type'] | default(None) }}"
+      start_date: "{{ __current_filter[1]['start_date'] | default(None) }}"
+      end_date: "{{ __current_filter[1]['end_date'] | default(None) }}"
+      types: "{{ __current_filter[1]['types'] | default(None) }}"
+      errata_id: "{{ __current_filter[1]['errata_id'] | default(None) }}"
   loop: "{{ result_api_response.json.results | subelements('rules', skip_missing=true) }}"
   loop_control:
     loop_var: __current_filter

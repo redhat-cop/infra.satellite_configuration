@@ -1,0 +1,4 @@
+---
+bugfixes:
+  - filetree_create - fix content view filter export crash when a filter rule has no ``name`` (for example erratum by date or by id); export ``date_type``, ``start_date``, ``end_date``, ``types``, and ``errata_id`` for those rules (https://github.com/redhat-cop/infra.satellite_configuration/issues/90).
+...
