@@ -21,6 +21,9 @@
         | infra.satellite_configuration.satellite_configuration_reject_locked_items(
             __filter_locked_skip | default(true) | bool
           )
+        | infra.satellite_configuration.satellite_configuration_filter_export_items(
+            satellite_configuration_filetree_create_filters
+          )
       }}
 
 - name: Report locked objects omitted from export | {{ __filter_locked_call_type }}

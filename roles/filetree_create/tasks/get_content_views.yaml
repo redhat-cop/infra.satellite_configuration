@@ -8,11 +8,27 @@
   ansible.builtin.include_tasks: api_call.yaml
   vars:
     call_type: Content Views
-    api_link: "/katello/api/content_views?full_result=true"
+    api_link: >-
+      {{
+        '/katello/api/content_views?full_result=true'
+        | infra.satellite_configuration.satellite_configuration_append_export_search_for_resource(
+            satellite_configuration_filetree_create_filters,
+            'content_views'
+          )
+      }}
 
 - name: Content Views | Retain the Content Views' info
   ansible.builtin.set_fact:
-    __content_views_list: "{{ result_api_response.json.results }}"
+    __content_views_list: >-
+      {{
+        result_api_response.json.results
+        | infra.satellite_configuration.satellite_configuration_filter_export_items(
+            satellite_configuration_filetree_create_filters
+            | infra.satellite_configuration.satellite_configuration_filters_for_post_api_export(
+                'content_views'
+              )
+          )
+      }}
 
 - name: Content Views | Show debug information (__content_views_list)
   ansible.builtin.debug:

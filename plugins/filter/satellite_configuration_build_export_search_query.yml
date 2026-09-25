@@ -1,0 +1,55 @@
+---
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+DOCUMENTATION:
+  name: satellite_configuration_build_export_search_query
+  short_description: Build Foreman/Katello scoped_search from filetree_create export filters
+  version_added: 1.4.0
+  description:
+    - Translates C(satellite_configuration_filetree_create_filters) into a scoped_search string for API C(search=) parameters.
+    - Glob name patterns map to SQL C(name ~) predicates; exact names use C(name =).
+    - Returns C(None) when no API-side filters apply (for example empty filter lists).
+    - Skips name predicates when C(name_use_regex) is C(true); organization and I(extra_search) may still be emitted.
+  positional: filters
+  options:
+    filters:
+      description: Export scope filters (typically C(satellite_configuration_filetree_create_filters)).
+      type: dict
+      default: {}
+    extra_search:
+      description: Existing scoped_search fragment merged with AND (for example C(redhat=false)).
+      type: str
+      default: null
+    supports_organization:
+      description: When C(false), omit organization predicates (per-organization Katello URLs).
+      type: bool
+      default: true
+    supports_location:
+      description: When C(true), include C(locations) / C(locations_exclude) as C(location =) predicates.
+      type: bool
+      default: false
+    supports_domain:
+      description: When C(true), include C(domains) / C(domains_exclude) as C(domain =) predicates.
+      type: bool
+      default: false
+    supports_hostgroup_parents:
+      description: When C(true), include C(hostgroup_parents) as C(title) branch predicates.
+      type: bool
+      default: false
+  author:
+    - infra.satellite_configuration contributors
+
+EXAMPLES: |
+  - name: Build Katello search for content views
+    ansible.builtin.debug:
+      msg: >-
+        {{
+          satellite_configuration_filetree_create_filters
+          | infra.satellite_configuration.satellite_configuration_build_export_search_query
+        }}
+
+RETURN:
+  _value:
+    description: Scoped search string or C(None).
+    type: str
+...

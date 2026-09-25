@@ -7,16 +7,29 @@
   ansible.builtin.include_tasks: api_call.yaml
   vars:
     call_type: Repositories
-    api_link: /katello/api/repositories?full_result=true
+    api_link: >-
+      {{
+        '/katello/api/repositories?full_result=true'
+        | infra.satellite_configuration.satellite_configuration_append_export_search_for_resource(
+            satellite_configuration_filetree_create_filters,
+            'repositories'
+          )
+      }}
 
 - name: Repositories | Create a List
   ansible.builtin.set_fact:
     all_results: >-
       {{
         result_api_response.json.results
-        | sort(attribute='id')
         | rejectattr('url', 'search', satellite_redhat_repository_url_substring)
-        | rejectattr('product.orphaned', 'equalto', true)
+        | infra.satellite_configuration.satellite_configuration_reject_orphaned_katello_products
+        | infra.satellite_configuration.satellite_configuration_filter_export_items(
+            satellite_configuration_filetree_create_filters
+            | infra.satellite_configuration.satellite_configuration_filters_for_post_api_export(
+                'repositories'
+              )
+          )
+        | sort(attribute='id')
         | list
       }}
 
@@ -27,10 +40,17 @@
     api_link: /katello/api/repositories/
     loop_var: "{{ all_results }}"
 
+- name: Repositories | No repositories to detail
+  when: all_results | length == 0
+  ansible.builtin.set_fact:
+    detailed_info:
+      results: []
+
 - name: Repositories | Template Out Results
   when:
     - detailed_info is defined
-    - detailed_info | length > 0
+    - detailed_info.results is defined
+    - detailed_info.results | length > 0
   ansible.builtin.include_tasks: template_out.yaml
   vars:
     template_type: satellite_repositories

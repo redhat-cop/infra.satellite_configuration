@@ -1,0 +1,62 @@
+---
+# Assert reconcile diff results for the active reconcile_<case>.
+
+- name: Reconcile | organizations CaC out of scope does not create present entries
+  when: __integration_out_of_scope_org | default('') | length > 0
+  tags:
+    - reconcile
+    - reconcile_cac_out_of_scope
+  block:
+    - name: Reconcile CaC out of scope | Assert no diff entries
+      ansible.builtin.include_tasks: ../common/assert_reconcile_diff.yaml
+      vars:
+        __era_var_name: satellite_organizations
+        __era_diff_path: "{{ __integration_reconcile_diff_path }}"
+        __era_expect_diff_count: 0
+        __era_assert_label: reconcile_cac_out_of_scope
+
+- name: Reconcile | live out of scope does not create absent entries
+  when: __integration_out_of_scope_org | default('') | length > 0
+  tags:
+    - reconcile
+    - reconcile_live_out_of_scope
+  block:
+    - name: Reconcile live out of scope | Assert no diff entries
+      ansible.builtin.include_tasks: ../common/assert_reconcile_diff.yaml
+      vars:
+        __era_var_name: satellite_organizations
+        __era_diff_path: "{{ __integration_reconcile_diff_path }}"
+        __era_expect_diff_count: 0
+        __era_assert_label: reconcile_live_out_of_scope
+
+- name: Reconcile | unscoped compare reports out-of-scope CaC as present
+  when: __integration_out_of_scope_org | default('') | length > 0
+  tags:
+    - reconcile
+    - reconcile_unscoped_legacy
+  block:
+    - name: Reconcile unscoped legacy | Assert out-of-scope CaC organization is present
+      ansible.builtin.include_tasks: ../common/assert_reconcile_diff.yaml
+      vars:
+        __era_var_name: satellite_organizations
+        __era_diff_path: "{{ __integration_reconcile_diff_path }}"
+        __era_expect_present_new_min: 1
+        __era_assert_label: reconcile_unscoped_legacy
+
+- name: Reconcile | domains scope ignores out-of-scope CaC domain
+  when:
+    - __integration_filter_domain_name | default('') | length > 0
+    - __integration_exclude_domain_name | default('') | length > 0
+  tags:
+    - reconcile
+    - reconcile_domains_scope
+  block:
+    - name: Reconcile domains scope | Assert no diff entries
+      ansible.builtin.include_tasks: ../common/assert_reconcile_diff.yaml
+      vars:
+        __era_var_name: satellite_domains
+        __era_diff_path: "{{ __integration_reconcile_diff_path }}"
+        __era_expect_diff_count: 0
+        __era_assert_label: reconcile_domains_scope
+
+...

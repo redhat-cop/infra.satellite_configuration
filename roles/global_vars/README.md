@@ -26,6 +26,7 @@ dependencies:
 | `satellite_target` | — | Optional dict with the same shape as `satellite`; used by `filetree_read` and `dispatch` for import (falls back to `satellite` when omitted) |
 | `satellite_configuration_overrides_path` | — | Optional base directory for per-type `.d/` override fragments merged during `filetree_read` |
 | `satellite_configuration_filetree_read_merge_key` | `name` | Default object key for merging override fragments in `filetree_read` |
+| `satellite_configuration_filetree_create_filters` | see `defaults/main.yml` | Optional `filetree_create` export scope (organizations, names, locations, domains, hostgroup branch roots) |
 
 ### Source and target Satellite connections
 

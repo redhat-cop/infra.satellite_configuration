@@ -13,6 +13,23 @@ try:
 except ImportError:
     yaml = None
 
+try:
+    from ansible_collections.infra.satellite_configuration.plugins.module_utils.export_filters import (
+        filter_reconcile_scope_objects,
+    )
+except ModuleNotFoundError:
+    import importlib.util
+    from pathlib import Path
+
+    _EXPORT_FILTERS_PATH = Path(__file__).resolve().parent / "export_filters.py"
+    _EXPORT_FILTERS_SPEC = importlib.util.spec_from_file_location(
+        "export_filters",
+        _EXPORT_FILTERS_PATH,
+    )
+    _EXPORT_FILTERS_MODULE = importlib.util.module_from_spec(_EXPORT_FILTERS_SPEC)
+    _EXPORT_FILTERS_SPEC.loader.exec_module(_EXPORT_FILTERS_MODULE)
+    filter_reconcile_scope_objects = _EXPORT_FILTERS_MODULE.filter_reconcile_scope_objects
+
 DEFAULT_IGNORE_KEYS = frozenset(
     {
         "created_at",
@@ -85,7 +102,7 @@ def files_equal_at_text_level(cac_path, live_path):
     return normalize_text_for_compare(read_file_text(cac_path)) == normalize_text_for_compare(read_file_text(live_path))
 
 
-def load_objects_from_file(path, var_name):
+def load_objects_from_file(path, var_name, scope_filters=None, roles_name_excludes=None):
     """Load objects for var_name from a single YAML file."""
     if yaml is None:
         raise ImportError("PyYAML is required")
@@ -96,13 +113,21 @@ def load_objects_from_file(path, var_name):
     items = document.get(var_name, [])
     if not isinstance(items, list):
         return []
-    return [item for item in items if isinstance(item, dict)]
+    objects = [item for item in items if isinstance(item, dict)]
+    if scope_filters is not None:
+        objects = filter_reconcile_scope_objects(
+            objects,
+            scope_filters,
+            var_name,
+            roles_name_excludes,
+        )
+    return objects
 
 
-def build_object_index_from_file(path, var_name, merge_key):
+def build_object_index_from_file(path, var_name, merge_key, scope_filters=None, roles_name_excludes=None):
     """Build an object index from a single YAML file."""
     index = {}
-    for item in load_objects_from_file(path, var_name):
+    for item in load_objects_from_file(path, var_name, scope_filters, roles_name_excludes):
         key = item.get(merge_key)
         if key is None:
             continue
@@ -210,29 +235,63 @@ def reconcile_file_pair(
     var_name,
     merge_key,
     ignore_keys,
+    scope_filters=None,
+    roles_name_excludes=None,
 ):
     """Compare one CaC/live file pair and return reconcile entries for that file only."""
     if cac_path and live_path:
         if files_equal_at_text_level(cac_path, live_path):
             return [], {"present_new": 0, "present_changed": 0, "absent": 0}
-        live_index = build_object_index_from_file(live_path, var_name, merge_key)
-        cac_index = build_object_index_from_file(cac_path, var_name, merge_key)
+        live_index = build_object_index_from_file(
+            live_path,
+            var_name,
+            merge_key,
+            scope_filters,
+            roles_name_excludes,
+        )
+        cac_index = build_object_index_from_file(
+            cac_path,
+            var_name,
+            merge_key,
+            scope_filters,
+            roles_name_excludes,
+        )
         return compute_diff_items(live_index, cac_index, ignore_keys)
 
     if live_path and not cac_path:
-        live_index = build_object_index_from_file(live_path, var_name, merge_key)
+        live_index = build_object_index_from_file(
+            live_path,
+            var_name,
+            merge_key,
+            scope_filters,
+            roles_name_excludes,
+        )
         diff_items = [build_absent_entry(live_object, ignore_keys) for live_object in live_index.values()]
         return diff_items, {"present_new": 0, "present_changed": 0, "absent": len(diff_items)}
 
     if cac_path and not live_path:
-        cac_index = build_object_index_from_file(cac_path, var_name, merge_key)
+        cac_index = build_object_index_from_file(
+            cac_path,
+            var_name,
+            merge_key,
+            scope_filters,
+            roles_name_excludes,
+        )
         diff_items = [build_present_entry(cac_object) for cac_object in cac_index.values()]
         return diff_items, {"present_new": len(diff_items), "present_changed": 0, "absent": 0}
 
     return [], {"present_new": 0, "present_changed": 0, "absent": 0}
 
 
-def reconcile_directories(cac_dir, live_dir, var_name, merge_key, ignore_keys):
+def reconcile_directories(
+    cac_dir,
+    live_dir,
+    var_name,
+    merge_key,
+    ignore_keys,
+    scope_filters=None,
+    roles_name_excludes=None,
+):
     """Compare paired YAML files one at a time without loading both trees in memory."""
     diff_items = []
     stats = {"present_new": 0, "present_changed": 0, "absent": 0}
@@ -257,6 +316,8 @@ def reconcile_directories(cac_dir, live_dir, var_name, merge_key, ignore_keys):
             var_name,
             merge_key,
             ignore_keys,
+            scope_filters,
+            roles_name_excludes,
         )
         diff_items.extend(pair_items)
         stats = merge_stats(stats, pair_stats)

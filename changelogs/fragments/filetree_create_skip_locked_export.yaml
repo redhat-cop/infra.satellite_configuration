@@ -3,6 +3,10 @@ minor_changes:
   - filetree_create - skip locked provisioning templates, partition tables, job templates,
     and installation media at export by default (symmetric with dispatch import guards);
     log omitted locked object counts with a name sample.
+  - filetree_create - add ``satellite_configuration_append_locked_export_search_to_api_link``
+    because Foreman template/ptable/job-template index APIs omit the C(locked) attribute;
+    export uses C(search=locked=false) and integration tests discover locked objects with
+    C(search=locked=true). Installation media (C(/api/media)) do not support locked search.
   - filetree_create - add filetree_create_include_locked_templates to export factory
     templates for full-site backup scenarios.
   - filetree_create - add opt-in filetree_create_skip_satellite_host_operatingsystem to

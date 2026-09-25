@@ -1,0 +1,146 @@
+---
+# Assert exported CaC matches API results after applying the same scope filters.
+# Export runs via play-level import_role in filetree_create_export_filters.yaml.
+# Required: __efa_var_name, __efc_role_tag, __efa_api_results, __efa_filters
+# Optional: __efa_filter_mode (items|organizations), __efa_assert_label,
+#           __efa_api_name_key (default name), __efa_export_name_key (default name),
+#           __efa_api_path (override Foreman/Katello index path for scoped API re-query),
+#           __efa_resource_type (override filetree_create resource key for post-API filters)
+
+- name: Resolve export assert API scope | {{ __efa_assert_label | default(__efa_var_name) }}
+  ansible.builtin.set_fact:
+    __efa_assert_resource_type: "{{ __efa_resource_type | default(__efc_role_tag) }}"
+    __efa_assert_api_path: >-
+      {{
+        __efa_api_path | default(
+          __integration_export_api_index_paths[
+            __efa_resource_type | default(__efc_role_tag)
+          ] | default(''),
+          true
+        )
+      }}
+
+- name: Set export file path | {{ __efa_assert_label | default(__efa_var_name) }}
+  ansible.builtin.set_fact:
+    __efa_export_path: >-
+      {{ satellite_configuration_filetree_path }}/{{ __efa_var_name }}.d/{{ __efa_var_name }}.yaml
+
+- name: Stat exported object file | {{ __efa_assert_label | default(__efa_var_name) }}
+  ansible.builtin.stat:
+    path: "{{ __efa_export_path }}"
+  register: __efa_export_stat
+
+- name: Load exported object names | {{ __efa_assert_label | default(__efa_var_name) }}
+  ansible.builtin.set_fact:
+    __efa_exported_names: >-
+      {{
+        (
+          (
+            lookup('ansible.builtin.file', __efa_export_path)
+            | from_yaml
+          )[__efa_var_name]
+          | default([])
+          | map(attribute=__efa_export_name_key | default('name'))
+          | list
+        )
+        if __efa_export_stat.stat.exists | default(false) | bool
+        else []
+      }}
+
+- name: Query export-scoped API results for assert | {{ __efa_assert_label | default(__efa_var_name) }}
+  when:
+    - __efa_assert_api_path | default('') | length > 0
+    - __efa_assert_resource_type | default('') | length > 0
+  ansible.builtin.uri:
+    method: GET
+    url: >-
+      {{
+        satellite.server_url
+        ~ (
+            __efa_assert_api_path
+            | infra.satellite_configuration.satellite_configuration_append_export_search_for_resource(
+                __efa_filters,
+                __efa_assert_resource_type
+              )
+          )
+      }}
+    user: "{{ satellite.admin.username }}"
+    password: "{{ satellite.admin.password }}"
+    validate_certs: "{{ satellite.validate_certs }}"
+    force_basic_auth: true
+    return_content: true
+    timeout: 1200
+  register: __efa_scoped_api
+  no_log: true
+
+- name: Select raw API baseline for export assert | {{ __efa_assert_label | default(__efa_var_name) }}
+  ansible.builtin.set_fact:
+    __efa_assert_api_baseline: >-
+      {{
+        __efa_scoped_api.json.results | default([])
+        if (
+          __efa_assert_api_path | default('') | length > 0
+          and __efa_assert_resource_type | default('') | length > 0
+          and __efa_scoped_api is defined
+        )
+        else __efa_api_results
+      }}
+
+- name: Apply export index preprocessing for assert baseline | {{ __efa_assert_label | default(__efa_var_name) }}
+  ansible.builtin.set_fact:
+    __efa_assert_api_baseline: >-
+      {{
+        __efa_assert_api_baseline
+        | rejectattr('url', 'search', satellite_redhat_repository_url_substring)
+        | infra.satellite_configuration.satellite_configuration_reject_orphaned_katello_products
+      }}
+  when: __efa_var_name == 'satellite_repositories'
+
+- name: Apply settings readonly preprocessing for assert baseline | {{ __efa_assert_label | default(__efa_var_name) }}
+  ansible.builtin.set_fact:
+    __efa_assert_api_baseline: >-
+      {{
+        __efa_assert_api_baseline
+        | rejectattr('readonly', 'equalto', true)
+        | rejectattr('readonly', 'equalto', 1)
+      }}
+  when: __efa_var_name == 'satellite_settings'
+
+- name: Build expected object names from API | {{ __efa_assert_label | default(__efa_var_name) }}
+  ansible.builtin.set_fact:
+    __efa_expected_names: >-
+      {{
+        (
+          __efa_assert_api_baseline
+          | infra.satellite_configuration.satellite_configuration_filter_export_organizations(
+              __efa_filters
+            )
+          if (__efa_filter_mode | default('items')) == 'organizations'
+          else __efa_assert_api_baseline
+          | infra.satellite_configuration.satellite_configuration_filter_export_items(
+              (
+                __efa_filters
+                | infra.satellite_configuration.satellite_configuration_filters_for_post_api_export(
+                    __efa_assert_resource_type
+                  )
+              )
+              if __efa_assert_resource_type | default('') | length > 0
+              else __efa_filters,
+              __efa_api_name_key | default('name')
+            )
+        )
+        | map(attribute=__efa_api_name_key | default('name'))
+        | list
+      }}
+
+- name: Assert export matches scoped API subset | {{ __efa_assert_label | default(__efa_var_name) }}
+  ansible.builtin.assert:
+    that:
+      - __efa_exported_names | difference(__efa_expected_names) | length == 0
+      - __efa_expected_names | difference(__efa_exported_names) | length == 0
+    fail_msg: >-
+      Filter {{ __efa_assert_label | default(__efa_var_name) }}: exported {{
+        __efa_exported_names | join(', ')
+      }} != expected {{ __efa_expected_names | join(', ') }}.
+
+...

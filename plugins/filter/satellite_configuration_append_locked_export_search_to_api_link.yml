@@ -1,0 +1,46 @@
+---
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+DOCUMENTATION:
+  name: satellite_configuration_append_locked_export_search_to_api_link
+  short_description: Append Foreman locked scope search to a template API path
+  version_added: 1.4.0
+  description:
+    - Foreman template, partition table, and job template index APIs omit the C(locked) attribute;
+      use scoped_search instead.
+    - When I(skip_locked) is C(true), append C(search=locked=false) to exclude locked objects.
+    - When I(locked_only) is C(true), append C(search=locked=true) to list locked objects only.
+    - Do not use this filter with C(/api/media); installation media do not support locked search.
+  positional: _input
+  options:
+    _input:
+      description: Foreman API path (for example C(/api/ptables?per_page=all)).
+      type: str
+      required: true
+    skip_locked:
+      description: Exclude locked objects via C(search=locked=false).
+      type: bool
+      default: true
+    locked_only:
+      description: Include only locked objects via C(search=locked=true).
+      type: bool
+      default: false
+  author:
+    - infra.satellite_configuration contributors
+
+EXAMPLES: |
+  - name: Export only unlocked provisioning templates
+    ansible.builtin.set_fact:
+      api_link: >-
+        {{
+          '/api/provisioning_templates?per_page=all'
+          | infra.satellite_configuration.satellite_configuration_append_locked_export_search_to_api_link(
+              true
+            )
+        }}
+
+RETURN:
+  _value:
+    description: API path with optional locked scoped_search query parameter.
+    type: str
+...

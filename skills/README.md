@@ -22,6 +22,10 @@ See **`fqcn-standards.mdc`** for full rules. Summary:
 
 Every Ansible task/playbook YAML file under `roles/` and `playbooks/` must end with `...` (ansible-lint `yaml[document-end]`). This includes helper includes (`*_batch.yaml`, `wait_for_*.yaml`, etc.), not only `satellite_<domain>.yaml`. See **`fqcn-standards.mdc`**.
 
+## Python unit tests (mandatory)
+
+Every new or changed Python file under `plugins/` must have matching coverage under `tests/unit/`. See **`python-unit-tests.mdc`**.
+
 ## End-to-End and Role Extension
 
 | Skill | Purpose |
@@ -36,6 +40,8 @@ Every Ansible task/playbook YAML file under `roles/` and `playbooks/` must end w
 | `format-generated-yaml` | `format_yaml` module usage |
 | `fqcn-standards` | FQCN rules for all code |
 | `changelog-fragments` | Required `changelogs/fragments/` entries for PRs |
+| `live-satellite-integration-tests` | Live-Satellite tests under `tests/integration/` (full roles, yaml_format) |
+| `python-unit-tests` | Mandatory unit tests under `tests/unit/` for every new/changed `plugins/**/*.py` |
 
 ## Domain Workflows (dispatch / export)
 

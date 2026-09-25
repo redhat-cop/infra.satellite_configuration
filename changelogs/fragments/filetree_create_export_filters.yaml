@@ -1,0 +1,17 @@
+---
+minor_changes:
+  - filetree_create - add ``satellite_configuration_filetree_create_filters`` for organization allow/deny lists and name glob or regex include/exclude patterns on export.
+  - filetree_create - add ``satellite_configuration_filter_export_items`` and ``satellite_configuration_filter_export_organizations`` collection filters.
+  - filetree_create - push export scope filters to Katello ``search=`` on repositories, content views, lifecycle environments, products, activation keys, host collections, content credentials, and sync plans when translatable to scoped_search; client-side post-filter remains as a safety net.
+  - filetree_create - add Tier 2 export scope filters ``locations``, ``domains``, and ``hostgroup_parents`` with Foreman ``search=`` on host groups, domains, subnets, and users.
+  - filetree_create - add Tier 3 Katello filters (``products``, ``lifecycle_environments``, ``content_views``, ``labels``, ``repository_sets_only_enabled``) and Tier 4 identity/govern filters (``auth_sources``, ``users_admin``, ``settings_include``/``exclude``, ``roles_include_builtin``/``locked``, ``search``/``search_by_type``).
+  - filetree_create - add ``satellite_configuration_append_export_search_for_resource`` and cache ``organization_info`` across Katello export tasks in a play.
+  - filetree_create - fix organization cache so skipped ``resolve_export_organizations`` lookups do not overwrite a prior successful ``organization_info`` result (Ansible register-on-skip).
+  - filetree_create - use API index export for settings (replacing ``setting_info``) when settings scope filters or ``search=`` apply.
+  - filetree_create - add ``satellite_configuration_build_export_search_query`` and ``satellite_configuration_append_export_search_to_api_link`` collection filters.
+  - filetree_create - add ``satellite_configuration_filters_for_post_api_export`` so API index post-filters do not drop objects missing related-name fields (for example subnet domains).
+  - filetree_create - add ``satellite_configuration_reject_orphaned_katello_products`` for repository index cleanup when ``product`` is a string or dict.
+  - filetree_create - fix repository and host group export templates to gate on ``detailed_info.results`` length.
+  - filetree_reconcile - apply ``satellite_configuration_filetree_reconcile_filters`` to both live and CaC objects during compare (default mirrors ``satellite_configuration_filetree_create_filters``).
+  - filetree_reconcile_diff - add ``scope_filters`` and ``roles_name_excludes`` parameters; reuse export scope logic via ``filter_reconcile_scope_objects``.
+...

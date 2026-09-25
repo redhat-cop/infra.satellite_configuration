@@ -32,6 +32,9 @@ set_ownership: false
 
 satellite_configuration_filetree_create_secure_logging: true
 
+# Export scope filters (organization allow/deny lists, name glob/regex patterns).
+# Defined in role global_vars as satellite_configuration_filetree_create_filters.
+
 # Omit subscription/provider-managed products from export (Katello search redhat=false).
 # The products index API omits redhat/provider_name; template-side checks alone are insufficient.
 satellite_configuration_filetree_export_skip_provider_products: true

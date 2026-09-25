@@ -64,6 +64,85 @@ The following variables are required for that role to work properly:
 | `filetree_create_skip_satellite_host_operatingsystem` | `false` | no | bool | When `true`, omit the operating system assigned to the Satellite host (matched via `satellite.server_url` hostname on `/api/hosts`). Opt-in because some migrations need every OS exported. |
 | `output_path` | see `satellite_configuration_filetree_path` in role `global_vars` | no | str | Alias for `satellite_configuration_filetree_path`. Export writes `satellite_<type>.d/<type>.yaml` under this directory. |
 | `satellite_configuration_export_source_aliases` | `[]` | no | list | Extra IPs, short names, or alternate FQDNs of the source Satellite to replace in installation-medium paths with `vault_satellite_installation_mediums_target_fqdn`. |
+| `satellite_configuration_filetree_create_filters` | see role `global_vars` | no | dict | Optional export scope: organization allow/deny lists and name glob or regex include/exclude patterns applied to every object type. Empty lists disable that dimension. |
+
+### Export scope filters
+
+Set `satellite_configuration_filetree_create_filters` (from role **`global_vars`**) to limit which Satellite objects are written during export. Ansible tags still select object *types*; these filters select *instances*.
+
+```yaml
+satellite_configuration_filetree_create_filters:
+  organizations: ["ACME"]           # Katello allowlist (exact names); omit or [] for all orgs
+  organizations_exclude: []           # Katello denylist (exact names)
+  name_include: ["ACME-*", "prod-*"]  # glob patterns unless name_use_regex is true
+  name_exclude: ["test-*", "zabbix"]
+  name_use_regex: false
+  locations: []                     # Foreman location allowlist (exact names)
+  locations_exclude: []
+  domains: []                       # domain allowlist (exact names)
+  domains_exclude: []
+  hostgroup_parents: []             # hostgroup branch roots (title path prefix)
+  products: []
+  products_exclude: []
+  lifecycle_environments: []
+  lifecycle_environments_exclude: []
+  content_views: []
+  content_views_exclude: []
+  labels: []
+  labels_exclude: []
+  repository_sets_only_enabled: true
+  auth_sources: []
+  auth_sources_exclude: []
+  users_admin: null                 # true/false to export only admins or only non-admins
+  settings_include: []
+  settings_exclude: []
+  roles_include_builtin: false
+  roles_include_locked: false
+  search: ""                        # global scoped_search AND fragment for API index calls
+  search_by_type: {}                # per-resource scoped_search fragments (keys match resource_type)
+```
+
+* **Organizations** — restricts Katello per-organization export loops and filters objects that expose an `organization` / `organization_name` field (for example repositories, content views, lifecycle environments).
+* **Name patterns** — applied to each object's `name` (or `login` for users). Include patterns are evaluated first; exclude patterns remove matches afterward.
+* **Locations** — filters host groups, subnets, domains, and users by `location` / `default_location` (and related API fields). Pushed to Foreman `search=` on host groups, domains, and users when set.
+* **Domains** — filters host groups and subnets by associated domain names. Pushed to Foreman `search=` on host groups and subnets when set.
+* **Hostgroup parents** — when non-empty, exports only the listed hostgroup roots and their descendants (matched on Foreman `title`). Pushed to `search=` on the hostgroup index when set; post-filter retains the branch as a safety net.
+* **Products / lifecycle environments / content views / labels** — Katello content scope on repositories, products, activation keys, repository sets, and related types (exact names). Pushed to `search=` when the resource supports the field (`product`, `environment`, `content_view`, `label`).
+* **Repository sets** — `repository_sets_only_enabled` (default `true`) keeps the previous behavior of exporting enabled sets only; set to `false` to include disabled sets.
+* **Auth sources / users admin** — filter users by `auth_source` name and optional `users_admin` boolean.
+* **Settings** — `settings_include` / `settings_exclude` restrict exported Foreman settings by name (API `search=` when set).
+* **Roles** — `roles_include_builtin` and `roles_include_locked` opt in to exporting built-in or locked roles (default remains custom non-locked roles only).
+* **Search passthrough** — `search` and `search_by_type` append raw scoped_search fragments to API index calls (merged with generated predicates).
+* **Defaults** — when every list is empty and `name_use_regex` is `false`, export behavior matches previous releases (full instance minus built-in exclusions).
+
+#### API `search=` vs client-side post-filter
+
+When export filters can be translated into Foreman/Katello `scoped_search` syntax, `filetree_create` appends a `search=` parameter to the index API call **before** fetching data. This reduces payload size and avoids nested follow-up calls for objects that would be dropped anyway (notably content views, repositories, and lifecycle environments).
+
+| Filter dimension | Pushed to API when | Client post-filter still runs |
+| --- | --- | --- |
+| `organizations` / `organizations_exclude` | Global Katello index endpoints (repositories, content views, lifecycle environments) | Yes (safety net) |
+| `organizations` | Per-organization Katello loops (products, activation keys, host collections) via org allowlist on the loop, not `search=` | Yes |
+| `name_include` / `name_exclude` (globs) | Index calls when `name_use_regex: false` | Yes |
+| `name_include` / `name_exclude` with `name_use_regex: true` | No — scoped_search cannot express arbitrary regex reliably | Yes (only place name regex is applied) |
+| `locations` / `locations_exclude` | Host groups, domains, users (`location=`); subnets/domains use post-filter on API `domains` lists | Yes |
+| `domains` / `domains_exclude` | Host groups, subnets (`domain=`); multi-domain subnets still post-filtered | Yes |
+| `hostgroup_parents` | Host groups (`title` / `title ~` branch predicates) | Yes |
+| `products` / `lifecycle_environments` / `content_views` / `labels` | Matching Katello/Foreman index endpoints per resource | Yes |
+| `auth_sources` / `users_admin` | Users index (`auth_source`, `admin`) | Yes |
+| `settings_include` / `settings_exclude` | Settings index (`name =`) | Yes |
+| `search` / `search_by_type` | All index calls using `append_export_search_for_resource` | Yes |
+| Built-in exclusions (locked templates, CDN repos, built-in roles) | Only where already implemented (for example `redhat=false` on products) | Yes |
+
+The collection filters `satellite_configuration_build_export_search_query`, `satellite_configuration_append_export_search_to_api_link`, and `satellite_configuration_append_export_search_for_resource` build the API query; `satellite_configuration_filter_export_items` always runs afterward on the API response. Katello organization lookups are cached per play after the first `resolve_export_organizations` call.
+
+Example partial export:
+
+```yaml
+satellite_configuration_filetree_create_filters:
+  organizations: ["ACME"]
+  name_exclude: ["*-lab", "test-*"]
+```
 
 ## Output files format
 

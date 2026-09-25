@@ -7,7 +7,14 @@
   ansible.builtin.include_tasks: api_call.yaml
   vars:
     call_type: Roles
-    api_link: /api/roles?per_page=all
+    api_link: >-
+      {{
+        '/api/roles?per_page=all'
+        | infra.satellite_configuration.satellite_configuration_append_export_search_for_resource(
+            satellite_configuration_filetree_create_filters,
+            'roles'
+          )
+      }}
 
 - name: Roles | Get Detailed Info
   when: result_api_response.json.results | default([]) | length > 0
@@ -19,6 +26,9 @@
       {{
         result_api_response.json.results
         | rejectattr('name', 'in', filetree_create_roles_name_excludes + filetree_create_roles_name_excludes_extra)
+        | infra.satellite_configuration.satellite_configuration_filter_export_items(
+            satellite_configuration_filetree_create_filters
+          )
         | sort(attribute='id')
       }}
 
@@ -44,8 +54,20 @@
     - detailed_info.results is defined
     - detailed_info.results | length > 0
     - __role_detail.json is defined
-    - (__role_detail.json.builtin | default(0) | int) == 0
-    - not (__role_detail.json.locked | default(false) | bool)
+    - >-
+      ((__role_detail.json.builtin | default(0) | int) == 0)
+      or (
+        satellite_configuration_filetree_create_filters.roles_include_builtin
+        | default(false)
+        | bool
+      )
+    - >-
+      (not (__role_detail.json.locked | default(false) | bool))
+      or (
+        satellite_configuration_filetree_create_filters.roles_include_locked
+        | default(false)
+        | bool
+      )
 
 - name: Roles | Apply filtered role details
   when: detailed_info.results is defined and detailed_info.results | length > 0

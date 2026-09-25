@@ -1,19 +1,34 @@
 ---
+- name: Settings | Reset the results variable
+  ansible.builtin.set_fact:
+    result_api_response: {}
+
 - name: Settings | Get Basic Info
-  redhat.satellite.setting_info:
-    server_url: "{{ satellite.server_url }}"
-    username: "{{ satellite.admin.username }}"
-    password: "{{ satellite.admin.password }}"
-    validate_certs: "{{ satellite.validate_certs }}"
-  register: __setting_result_api_response
+  ansible.builtin.include_tasks: api_call.yaml
+  vars:
+    call_type: Settings
+    api_link: >-
+      {{
+        '/api/settings?per_page=all'
+        | infra.satellite_configuration.satellite_configuration_append_export_search_for_resource(
+            satellite_configuration_filetree_create_filters,
+            'settings'
+          )
+      }}
 
 - name: Settings | Set Info List
   ansible.builtin.set_fact:
     info_list: >-
       {{
-        __setting_result_api_response.settings
+        result_api_response.json.results
         | rejectattr('readonly', 'equalto', true)
         | rejectattr('readonly', 'equalto', 1)
+        | infra.satellite_configuration.satellite_configuration_filter_export_items(
+            satellite_configuration_filetree_create_filters
+            | infra.satellite_configuration.satellite_configuration_filters_for_post_api_export(
+                'settings'
+              )
+          )
         | sort(attribute='id')
       }}
 

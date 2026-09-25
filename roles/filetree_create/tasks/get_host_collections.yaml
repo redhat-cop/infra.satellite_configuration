@@ -5,23 +5,36 @@
     __host_collections_info_list: []
 
 - name: Host Collections | Get Organizations
-  redhat.satellite.organization_info:
-    server_url: "{{ satellite.server_url }}"
-    username: "{{ satellite.admin.username }}"
-    password: "{{ satellite.admin.password }}"
-    validate_certs: "{{ satellite.validate_certs }}"
-  register: __result_organizations
+  ansible.builtin.include_tasks: resolve_export_organizations.yaml
+  vars:
+    __export_org_call_type: Host Collections
 
 - name: Host Collections | Fetch host collections per organization
   ansible.builtin.include_tasks: get_host_collections_do_work.yaml
-  loop: "{{ __result_organizations.organizations }}"
+  loop: >-
+    {{
+      __result_organizations.organizations
+      | infra.satellite_configuration.satellite_configuration_filter_export_organizations(
+          satellite_configuration_filetree_create_filters
+        )
+    }}
   loop_control:
     loop_var: __current_org
     label: "{{ __current_org.name }}"
 
 - name: Host Collections | Set Info List
   ansible.builtin.set_fact:
-    info_list: "{{ __host_collections_info_list | default([]) | sort(attribute='id') }}"
+    info_list: >-
+      {{
+        __host_collections_info_list | default([])
+        | infra.satellite_configuration.satellite_configuration_filter_export_items(
+            satellite_configuration_filetree_create_filters
+            | infra.satellite_configuration.satellite_configuration_filters_for_post_api_export(
+                'host_collections'
+              )
+          )
+        | sort(attribute='id')
+      }}
 
 - name: Host Collections | Template Out Results
   when:

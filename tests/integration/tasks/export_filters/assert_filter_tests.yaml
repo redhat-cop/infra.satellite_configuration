@@ -1,0 +1,464 @@
+---
+# Assert filter export results for the active filter_<test> case.
+
+- name: Filter organizations | Run export scope test
+  when: __integration_filter_org | default('') | length > 0
+  tags:
+    - filter
+    - filter_organizations
+  block:
+    - name: Filter organizations | Assert export
+      ansible.builtin.include_tasks: assert_export_subset.yaml
+      vars:
+        __efa_var_name: satellite_organizations
+        __efc_role_tag: organizations
+        __efa_api_results: "{{ __integration_organizations_api.json.results | default([]) }}"
+        __efa_filters: "{{ __integration_export_filters }}"
+        __efa_filter_mode: organizations
+        __efa_assert_label: organizations
+
+- name: Filter organizations on repositories | Run export scope test
+  when: __integration_filter_org | default('') | length > 0
+  tags:
+    - filter
+    - filter_organizations_repositories
+  block:
+    - name: Filter organizations on repositories | Assert export
+      ansible.builtin.include_tasks: assert_export_subset.yaml
+      vars:
+        __efa_var_name: satellite_repositories
+        __efc_role_tag: repositories
+        __efa_api_results: "{{ __integration_repositories_api_clean }}"
+        __efa_filters: "{{ __integration_export_filters }}"
+        __efa_assert_label: organizations_repositories
+
+- name: Filter organizations_exclude | Run export scope test
+  when: __integration_exclude_org | default('') | length > 0
+  tags:
+    - filter
+    - filter_organizations_exclude
+  block:
+    - name: Filter organizations_exclude | Assert export
+      ansible.builtin.include_tasks: assert_export_subset.yaml
+      vars:
+        __efa_var_name: satellite_organizations
+        __efc_role_tag: organizations
+        __efa_api_results: "{{ __integration_organizations_api.json.results | default([]) }}"
+        __efa_filters: "{{ __integration_export_filters }}"
+        __efa_filter_mode: organizations
+        __efa_assert_label: organizations_exclude
+
+- name: Filter name_include | Run export scope test
+  when: __integration_filter_domain_name | default('') | length > 0
+  tags:
+    - filter
+    - filter_name_include
+  block:
+    - name: Filter name_include | Assert export
+      ansible.builtin.include_tasks: assert_export_subset.yaml
+      vars:
+        __efa_var_name: satellite_domains
+        __efc_role_tag: domains
+        __efa_api_results: "{{ __integration_domains_api.json.results | default([]) }}"
+        __efa_filters: "{{ __integration_export_filters }}"
+        __efa_assert_label: name_include
+
+- name: Filter name_exclude | Run export scope test
+  when: __integration_exclude_domain_name | default('') | length > 0
+  tags:
+    - filter
+    - filter_name_exclude
+  block:
+    - name: Filter name_exclude | Assert export
+      ansible.builtin.include_tasks: assert_export_subset.yaml
+      vars:
+        __efa_var_name: satellite_domains
+        __efc_role_tag: domains
+        __efa_api_results: "{{ __integration_domains_api.json.results | default([]) }}"
+        __efa_filters: "{{ __integration_export_filters }}"
+        __efa_assert_label: name_exclude
+
+- name: Filter name_use_regex | Run export scope test
+  when: __integration_filter_domain_name | default('') | length > 0
+  tags:
+    - filter
+    - filter_name_use_regex
+  block:
+    - name: Filter name_use_regex | Assert export
+      ansible.builtin.include_tasks: assert_export_subset.yaml
+      vars:
+        __efa_var_name: satellite_domains
+        __efc_role_tag: domains
+        __efa_api_results: "{{ __integration_domains_api.json.results | default([]) }}"
+        __efa_filters: "{{ __integration_export_filters }}"
+        __efa_assert_label: name_use_regex
+
+- name: Filter locations | Run export scope test
+  when: __integration_filter_location_name | default('') | length > 0
+  tags:
+    - filter
+    - filter_locations
+  block:
+    - name: Filter locations | Assert export
+      ansible.builtin.include_tasks: assert_export_subset.yaml
+      vars:
+        __efa_var_name: satellite_hostgroups
+        __efc_role_tag: hostgroups
+        __efa_api_results: "{{ __integration_hostgroups_api.json.results | default([]) }}"
+        __efa_filters: "{{ __integration_export_filters }}"
+        __efa_assert_label: locations
+
+- name: Filter locations_exclude | Run export scope test
+  when: __integration_exclude_location_name | default('') | length > 0
+  tags:
+    - filter
+    - filter_locations_exclude
+  block:
+    - name: Filter locations_exclude | Assert export
+      ansible.builtin.include_tasks: assert_export_subset.yaml
+      vars:
+        __efa_var_name: satellite_hostgroups
+        __efc_role_tag: hostgroups
+        __efa_api_results: "{{ __integration_hostgroups_api.json.results | default([]) }}"
+        __efa_filters: "{{ __integration_export_filters }}"
+        __efa_assert_label: locations_exclude
+
+- name: Filter domains | Run export scope test
+  when: __integration_filter_domain_name | default('') | length > 0
+  tags:
+    - filter
+    - filter_domains
+  block:
+    - name: Filter domains | Assert export
+      ansible.builtin.include_tasks: assert_export_subset.yaml
+      vars:
+        __efa_var_name: satellite_subnets
+        __efc_role_tag: subnets
+        __efa_api_results: "{{ __integration_subnets_api.json.results | default([]) }}"
+        __efa_filters: "{{ __integration_export_filters }}"
+        __efa_assert_label: domains
+
+- name: Filter domains_exclude | Run export scope test
+  when: __integration_exclude_domain_name | default('') | length > 0
+  tags:
+    - filter
+    - filter_domains_exclude
+  block:
+    - name: Filter domains_exclude | Assert export
+      ansible.builtin.include_tasks: assert_export_subset.yaml
+      vars:
+        __efa_var_name: satellite_subnets
+        __efc_role_tag: subnets
+        __efa_api_results: "{{ __integration_subnets_api.json.results | default([]) }}"
+        __efa_filters: "{{ __integration_export_filters }}"
+        __efa_assert_label: domains_exclude
+
+- name: Filter hostgroup_parents | Run export scope test
+  when: __integration_hostgroup_parent_root | default('') | length > 0
+  tags:
+    - filter
+    - filter_hostgroup_parents
+  block:
+    - name: Filter hostgroup_parents | Assert export
+      ansible.builtin.include_tasks: assert_export_subset.yaml
+      vars:
+        __efa_var_name: satellite_hostgroups
+        __efc_role_tag: hostgroups
+        __efa_api_results: "{{ __integration_hostgroups_api.json.results | default([]) }}"
+        __efa_filters: "{{ __integration_export_filters }}"
+        __efa_assert_label: hostgroup_parents
+
+- name: Filter products | Run export scope test
+  when: __integration_filter_product_name | default('') | length > 0
+  tags:
+    - filter
+    - filter_products
+  block:
+    - name: Filter products | Assert export
+      ansible.builtin.include_tasks: assert_export_subset.yaml
+      vars:
+        __efa_var_name: satellite_repositories
+        __efc_role_tag: repositories
+        __efa_api_results: "{{ __integration_repositories_api_clean }}"
+        __efa_filters: "{{ __integration_export_filters }}"
+        __efa_assert_label: products
+
+- name: Filter products_exclude | Run export scope test
+  when: __integration_exclude_product_name | default('') | length > 0
+  tags:
+    - filter
+    - filter_products_exclude
+  block:
+    - name: Filter products_exclude | Assert export
+      ansible.builtin.include_tasks: assert_export_subset.yaml
+      vars:
+        __efa_var_name: satellite_repositories
+        __efc_role_tag: repositories
+        __efa_api_results: "{{ __integration_repositories_api_clean }}"
+        __efa_filters: "{{ __integration_export_filters }}"
+        __efa_assert_label: products_exclude
+
+- name: Filter lifecycle_environments | Run export scope test
+  when: __integration_filter_lifecycle_environment_name | default('') | length > 0
+  tags:
+    - filter
+    - filter_lifecycle_environments
+  block:
+    - name: Filter lifecycle_environments | Assert export
+      ansible.builtin.include_tasks: assert_export_subset.yaml
+      vars:
+        __efa_var_name: satellite_lifecycle_environments
+        __efc_role_tag: lifecycle_environments
+        __efa_api_results: >-
+          {{
+            __integration_lifecycle_environments_api.json.results
+            | default([])
+            | rejectattr('name', 'equalto', 'Library')
+            | list
+          }}
+        __efa_filters: "{{ __integration_export_filters }}"
+        __efa_assert_label: lifecycle_environments
+
+- name: Filter lifecycle_environments_exclude | Run export scope test
+  when: __integration_exclude_lifecycle_environment_name | default('') | length > 0
+  tags:
+    - filter
+    - filter_lifecycle_environments_exclude
+  block:
+    - name: Filter lifecycle_environments_exclude | Assert export
+      ansible.builtin.include_tasks: assert_export_subset.yaml
+      vars:
+        __efa_var_name: satellite_lifecycle_environments
+        __efc_role_tag: lifecycle_environments
+        __efa_api_results: >-
+          {{
+            __integration_lifecycle_environments_api.json.results
+            | default([])
+            | rejectattr('name', 'equalto', 'Library')
+            | list
+          }}
+        __efa_filters: "{{ __integration_export_filters }}"
+        __efa_assert_label: lifecycle_environments_exclude
+
+- name: Filter content_views | Run export scope test
+  when: __integration_filter_content_view_name | default('') | length > 0
+  tags:
+    - filter
+    - filter_content_views
+  block:
+    - name: Filter content_views | Assert export
+      ansible.builtin.include_tasks: assert_export_subset.yaml
+      vars:
+        __efa_var_name: satellite_content_views
+        __efc_role_tag: content_views
+        __efa_api_results: "{{ __integration_content_views_api.json.results | default([]) }}"
+        __efa_filters: "{{ __integration_export_filters }}"
+        __efa_assert_label: content_views
+
+- name: Filter content_views_exclude | Run export scope test
+  when: __integration_exclude_content_view_name | default('') | length > 0
+  tags:
+    - filter
+    - filter_content_views_exclude
+  block:
+    - name: Filter content_views_exclude | Assert export
+      ansible.builtin.include_tasks: assert_export_subset.yaml
+      vars:
+        __efa_var_name: satellite_content_views
+        __efc_role_tag: content_views
+        __efa_api_results: "{{ __integration_content_views_api.json.results | default([]) }}"
+        __efa_filters: "{{ __integration_export_filters }}"
+        __efa_assert_label: content_views_exclude
+
+- name: Filter labels | Run export scope test
+  when: __integration_filter_label_name | default('') | length > 0
+  tags:
+    - filter
+    - filter_labels
+  block:
+    - name: Filter labels | Assert export
+      ansible.builtin.include_tasks: assert_export_subset.yaml
+      vars:
+        __efa_var_name: satellite_repositories
+        __efc_role_tag: repositories
+        __efa_api_results: "{{ __integration_repositories_api_clean }}"
+        __efa_filters: "{{ __integration_export_filters }}"
+        __efa_assert_label: labels
+
+- name: Filter labels_exclude | Run export scope test
+  when:
+    - __integration_filter_label_name | default('') | length > 0
+    - __integration_exclude_label_name | default('') | length > 0
+  tags:
+    - filter
+    - filter_labels_exclude
+  block:
+    - name: Filter labels_exclude | Assert export
+      ansible.builtin.include_tasks: assert_export_subset.yaml
+      vars:
+        __efa_var_name: satellite_repositories
+        __efc_role_tag: repositories
+        __efa_api_results: "{{ __integration_repositories_api_clean }}"
+        __efa_filters: "{{ __integration_export_filters }}"
+        __efa_assert_label: labels_exclude
+
+- name: Filter repository_sets_only_enabled | Run export scope test
+  when: __integration_org_id | default('') | length > 0
+  tags:
+    - filter
+    - filter_repository_sets_only_enabled
+  block:
+    - name: Filter repository_sets_only_enabled | Assert export enabled count
+      ansible.builtin.include_tasks: assert_export_count.yaml
+      vars:
+        __efa_var_name: satellite_repository_sets
+        __efc_role_tag: repository_sets
+        __efa_filters: "{{ __integration_export_filters }}"
+        __efa_expected_count: "{{ __integration_repository_sets_expected_enabled_count }}"
+        __efa_assert_label: repository_sets_only_enabled
+
+- name: Filter auth_sources | Run export scope test
+  when: __integration_admin_user_login | default('') | length > 0
+  tags:
+    - filter
+    - filter_auth_sources
+  block:
+    - name: Filter auth_sources | Assert export
+      ansible.builtin.include_tasks: assert_export_subset.yaml
+      vars:
+        __efa_var_name: satellite_users
+        __efc_role_tag: users
+        __efa_api_results: "{{ __integration_users_api.json.results | default([]) }}"
+        __efa_filters: "{{ __integration_export_filters }}"
+        __efa_api_name_key: login
+        __efa_export_name_key: name
+        __efa_assert_label: auth_sources
+
+- name: Filter auth_sources_exclude | Run export scope test
+  when: __integration_admin_user_login | default('') | length > 0
+  tags:
+    - filter
+    - filter_auth_sources_exclude
+  block:
+    - name: Filter auth_sources_exclude | Assert export
+      ansible.builtin.include_tasks: assert_export_subset.yaml
+      vars:
+        __efa_var_name: satellite_users
+        __efc_role_tag: users
+        __efa_api_results: "{{ __integration_users_api.json.results | default([]) }}"
+        __efa_filters: "{{ __integration_export_filters }}"
+        __efa_api_name_key: login
+        __efa_export_name_key: name
+        __efa_assert_label: auth_sources_exclude
+
+- name: Filter users_admin | Run export scope test
+  when: __integration_admin_user_login | default('') | length > 0
+  tags:
+    - filter
+    - filter_users_admin
+  block:
+    - name: Filter users_admin | Assert export
+      ansible.builtin.include_tasks: assert_export_subset.yaml
+      vars:
+        __efa_var_name: satellite_users
+        __efc_role_tag: users
+        __efa_api_results: "{{ __integration_users_api.json.results | default([]) }}"
+        __efa_filters: "{{ __integration_export_filters }}"
+        __efa_api_name_key: login
+        __efa_export_name_key: name
+        __efa_assert_label: users_admin
+
+- name: Filter settings_include | Run export scope test
+  when: __integration_filter_setting_name | default('') | length > 0
+  tags:
+    - filter
+    - filter_settings_include
+  block:
+    - name: Filter settings_include | Assert export
+      ansible.builtin.include_tasks: assert_export_subset.yaml
+      vars:
+        __efa_var_name: satellite_settings
+        __efc_role_tag: settings
+        __efa_api_results: "{{ __integration_settings_api_clean }}"
+        __efa_filters: "{{ __integration_export_filters }}"
+        __efa_assert_label: settings_include
+
+- name: Filter settings_exclude | Run export scope test
+  when:
+    - __integration_filter_setting_name | default('') | length > 0
+    - (__integration_settings_api_clean | length) > 1
+  tags:
+    - filter
+    - filter_settings_exclude
+  block:
+    - name: Filter settings_exclude | Assert export
+      ansible.builtin.include_tasks: assert_export_subset.yaml
+      vars:
+        __efa_var_name: satellite_settings
+        __efc_role_tag: settings
+        __efa_api_results: "{{ __integration_settings_api_clean }}"
+        __efa_filters: "{{ __integration_export_filters }}"
+        __efa_assert_label: settings_exclude
+
+- name: Filter roles_include_builtin | Run export scope test
+  tags:
+    - filter
+    - filter_roles_include_builtin
+  block:
+    - name: Filter roles_include_builtin | Assert export file exists after opt-in
+      ansible.builtin.stat:
+        path: "{{ satellite_configuration_filetree_path }}/satellite_roles.d/satellite_roles.yaml"
+      register: __integration_roles_builtin_export_stat
+
+    - name: Filter roles_include_builtin | Assert built-in opt-in export completed
+      ansible.builtin.assert:
+        that:
+          - __integration_roles_builtin_export_stat.stat.exists | default(false) | bool
+        fail_msg: Role export with roles_include_builtin did not produce satellite_roles.yaml.
+
+- name: Filter roles_include_locked | Run export scope test
+  tags:
+    - filter
+    - filter_roles_include_locked
+  block:
+    - name: Filter roles_include_locked | Assert export file exists
+      ansible.builtin.stat:
+        path: "{{ satellite_configuration_filetree_path }}/satellite_roles.d/satellite_roles.yaml"
+      register: __integration_roles_locked_export_stat
+
+    - name: Filter roles_include_locked | Assert export completed
+      ansible.builtin.assert:
+        that:
+          - __integration_roles_locked_export_stat.stat.exists | default(false) | bool
+        fail_msg: Role export with roles_include_locked did not produce satellite_roles.yaml.
+
+- name: Filter search | Run export scope test
+  when: __integration_filter_domain_name | default('') | length > 0
+  tags:
+    - filter
+    - filter_search
+  block:
+    - name: Filter search | Assert export
+      ansible.builtin.include_tasks: assert_export_subset.yaml
+      vars:
+        __efa_var_name: satellite_domains
+        __efc_role_tag: domains
+        __efa_api_results: "{{ __integration_domains_api.json.results | default([]) }}"
+        __efa_filters: "{{ __integration_export_filters }}"
+        __efa_assert_label: search
+
+- name: Filter search_by_type | Run export scope test
+  when: __integration_filter_domain_name | default('') | length > 0
+  tags:
+    - filter
+    - filter_search_by_type
+  block:
+    - name: Filter search_by_type | Assert export
+      ansible.builtin.include_tasks: assert_export_subset.yaml
+      vars:
+        __efa_var_name: satellite_domains
+        __efc_role_tag: domains
+        __efa_api_results: "{{ __integration_domains_api.json.results | default([]) }}"
+        __efa_filters: "{{ __integration_export_filters }}"
+        __efa_assert_label: search_by_type
+...

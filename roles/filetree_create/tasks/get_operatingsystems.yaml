@@ -52,14 +52,19 @@
   ansible.builtin.set_fact:
     __operatingsystems_list: >-
       {{
-        result_api_response.json.results
-        | rejectattr('id', 'equalto', __satellite_host_operatingsystem_id)
-        | list
-        if (
-          (filetree_create_skip_satellite_host_operatingsystem | default(false) | bool)
-          and (__satellite_host_operatingsystem_id is defined)
+        (
+          result_api_response.json.results
+          | rejectattr('id', 'equalto', __satellite_host_operatingsystem_id)
+          | list
+          if (
+            (filetree_create_skip_satellite_host_operatingsystem | default(false) | bool)
+            and (__satellite_host_operatingsystem_id is defined)
+          )
+          else result_api_response.json.results
         )
-        else result_api_response.json.results
+        | infra.satellite_configuration.satellite_configuration_filter_export_items(
+            satellite_configuration_filetree_create_filters
+          )
       }}
 
 - name: Operating Systems | Get External Operating Systems Info

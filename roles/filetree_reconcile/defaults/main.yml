@@ -20,6 +20,14 @@ satellite_configuration_filetree_reconcile_apply: true
 # Object types to compare; defaults to the same list used by filetree_read.
 satellite_configuration_filetree_reconcile_tasks: "{{ satellite_configuration_filetree_read_tasks }}"
 
+# Compare scope filters (default mirrors filetree_create export filters).
+satellite_configuration_filetree_reconcile_filters: "{{ satellite_configuration_filetree_create_filters }}"
+satellite_configuration_filetree_reconcile_apply_scope_filters: true
+
+# Built-in role names excluded before reconcile scope filtering (shared with filetree_create).
+satellite_configuration_filetree_reconcile_roles_name_excludes: "{{ satellite_builtin_role_name_skips }}"
+satellite_configuration_filetree_reconcile_roles_name_excludes_extra: "{{ satellite_builtin_role_name_skips_extra }}"
+
 # Keys stripped before comparing live and CaC object definitions (and from absent copies).
 satellite_configuration_filetree_reconcile_ignore_keys:
   - created_at

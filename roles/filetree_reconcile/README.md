@@ -30,6 +30,16 @@ Reconcile the live Satellite configuration against Configuration as Code (CaC).
 | `satellite_configuration_filetree_reconcile_apply` | `true` | Run apply step |
 | `satellite_configuration_filetree_reconcile_tasks` | `{{ satellite_configuration_filetree_read_tasks }}` | Object types to compare |
 | `satellite_configuration_filetree_reconcile_secure_logging` | `true` | Scope `no_log` on sensitive compare tasks |
+| `satellite_configuration_filetree_reconcile_filters` | `{{ satellite_configuration_filetree_create_filters }}` | Scope filters applied to **both** live and CaC objects during compare |
+| `satellite_configuration_filetree_reconcile_apply_scope_filters` | `true` | When `false`, compare ignores scope filters (legacy unscoped behavior) |
+| `satellite_configuration_filetree_reconcile_roles_name_excludes` | `{{ satellite_builtin_role_name_skips }}` | Built-in role names excluded before scope filtering |
+| `satellite_configuration_filetree_reconcile_roles_name_excludes_extra` | `[]` | Additional role names excluded before scope filtering |
+
+## Export scope filters (symmetry with filetree_create)
+
+The live export step uses `filetree_create` and therefore honors `satellite_configuration_filetree_create_filters`. By default, compare applies the same scope to **both** sides via `satellite_configuration_filetree_reconcile_filters` (aliased to the create filters). Objects outside the export scope are omitted from the diff instead of producing false `state: present` (CaC-only, out of scope) or `state: absent` (live-only, out of scope) entries.
+
+Set `satellite_configuration_filetree_reconcile_apply_scope_filters: false` to compare full CaC trees without scope filtering. Override `satellite_configuration_filetree_reconcile_filters` when compare scope must differ from export scope.
 
 ## Example Playbook
 

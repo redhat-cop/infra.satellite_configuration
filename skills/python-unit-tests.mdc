@@ -1,0 +1,59 @@
+---
+description: Require a matching unit test under tests/unit/ for every new or changed Python module, module_utils helper, or filter plugin in plugins/.
+alwaysApply: false
+globs: "plugins/**/*.py,tests/unit/**/*.py"
+---
+
+# Python Unit Tests (mandatory)
+
+Any **new Python** under `plugins/` **must** have an associated unit test under `tests/unit/`. When changing existing Python, extend or add unit tests for the new behavior in the same change set.
+
+## Scope
+
+Applies to:
+
+- `plugins/modules/*.py`
+- `plugins/module_utils/*.py`
+- `plugins/filter/*.py` (and other plugin packages under `plugins/` that contain executable Python)
+
+Does **not** replace live Satellite integration tests (`skills/live-satellite-integration-tests.mdc`). Unit tests cover pure logic without a Satellite API.
+
+## Placement and naming
+
+Mirror the plugin path under `tests/unit/`:
+
+| Plugin path | Unit test path |
+| --- | --- |
+| `plugins/module_utils/foo.py` | `tests/unit/plugins/module_utils/test_foo.py` |
+| `plugins/modules/bar.py` | `tests/unit/plugins/modules/test_bar.py` |
+| `plugins/filter/baz.py` | `tests/unit/plugins/filter/test_baz.py` (or `test_baz_plugin.py` when distinguishing from module_utils) |
+
+Use `unittest` and load the module via `importlib.util.spec_from_file_location` when collection package imports are unavailable (same pattern as existing `tests/unit/plugins/**/test_*.py`).
+
+## What to cover
+
+- Public helpers and filter wrappers: happy path, edge cases, and failure/empty inputs that callers rely on.
+- For thin Ansible filter plugins that only delegate to `module_utils`, at least register `FilterModule().filters()` names and one wrapper call that proves delegation.
+- For modules with `run_module()`, prefer testing extractable helpers (I/O, pure transforms). Mock `AnsibleModule` only when needed.
+
+## Checklist before finishing a Python change
+
+1. New `.py` under `plugins/` → matching `test_*.py` exists and is committed in the same change.
+2. Changed public behavior → assert it in unit tests (do not rely only on integration).
+3. Run locally (no `tests/unit/__init__.py` package markers required):
+
+```bash
+python -m unittest $(find tests/unit -name 'test_*.py' | sed 's|/|.|g;s|\.py$||') -v
+```
+
+Or target specific modules:
+
+```bash
+python -m unittest tests.unit.plugins.module_utils.test_export_filters -v
+```
+
+## Do not
+
+- Ship new `plugins/**/*.py` without a unit test file.
+- Put Satellite live API calls in unit tests (use `tests/integration/` instead).
+- Skip unit tests because integration coverage exists — both layers are required when both apply.

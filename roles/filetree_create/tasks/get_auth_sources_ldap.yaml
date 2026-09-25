@@ -15,7 +15,14 @@
   vars:
     call_type: Auth Source LDAPs
     api_link: /api/auth_source_ldaps/
-    loop_var: "{{ result_api_response.json.results | sort(attribute='id') }}"
+    loop_var: >-
+      {{
+        result_api_response.json.results
+        | infra.satellite_configuration.satellite_configuration_filter_export_items(
+            satellite_configuration_filetree_create_filters
+          )
+        | sort(attribute='id')
+      }}
 
 - name: Auth Source LDAPs | No LDAP sources to detail
   when: result_api_response.json.results | default([]) | length == 0

@@ -1,0 +1,41 @@
+---
+# Between two play-level filetree_create exports for filter_roles_include_builtin.
+
+- name: Filter roles_include_builtin | Load default exported role names
+  when: "'filter_roles_include_builtin' in ansible_run_tags"
+  ansible.builtin.set_fact:
+    __integration_roles_default_export_names: >-
+      {{
+        (
+          lookup(
+            'ansible.builtin.file',
+            satellite_configuration_filetree_path ~ '/satellite_roles.d/satellite_roles.yaml',
+            errors='ignore'
+          )
+          | default('---\nsatellite_roles: []\n', true)
+          | from_yaml
+        ).satellite_roles
+        | default([])
+        | map(attribute='name')
+        | list
+      }}
+
+- name: Filter roles_include_builtin | Assert built-in skip list role is absent by default
+  when: "'filter_roles_include_builtin' in ansible_run_tags"
+  ansible.builtin.assert:
+    that:
+      - "'Manager' not in __integration_roles_default_export_names"
+    fail_msg: >-
+      Default role export should skip built-in role names from satellite_builtin_role_name_skips.
+    quiet: true
+
+- name: Filter roles_include_builtin | Opt in to built-in roles
+  when: "'filter_roles_include_builtin' in ansible_run_tags"
+  ansible.builtin.set_fact:
+    __integration_export_filters: >-
+      {{
+        __integration_export_filters
+        | combine({'roles_include_builtin': true}, recursive=True)
+      }}
+
+...

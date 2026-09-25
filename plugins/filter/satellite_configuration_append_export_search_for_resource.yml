@@ -1,0 +1,48 @@
+---
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+DOCUMENTATION:
+  name: satellite_configuration_append_export_search_for_resource
+  short_description: Append export scope search= using per-resource API defaults
+  version_added: 1.4.0
+  description:
+    - Wraps C(satellite_configuration_append_export_search_to_api_link) with resource-specific scoped_search field support.
+    - Merges C(search) and C(search_by_type) from C(satellite_configuration_filetree_create_filters).
+  positional: api_link
+  options:
+    api_link:
+      description: API path and query string.
+      type: str
+      required: true
+    filters:
+      description: Export scope filters (typically C(satellite_configuration_filetree_create_filters)).
+      type: dict
+      default: {}
+    resource_type:
+      description: Resource key (for example C(repositories), C(hostgroups), C(settings)).
+      type: str
+      default: null
+    extra_search:
+      description: Additional scoped_search fragment merged with AND.
+      type: str
+      default: null
+  author:
+    - infra.satellite_configuration contributors
+
+EXAMPLES: |
+  - name: Repositories index with export scope
+    ansible.builtin.set_fact:
+      api_link: >-
+        {{
+          '/katello/api/repositories?full_result=true'
+          | infra.satellite_configuration.satellite_configuration_append_export_search_for_resource(
+              satellite_configuration_filetree_create_filters,
+              'repositories'
+            )
+        }}
+
+RETURN:
+  _value:
+    description: API path with optional C(search=) parameter.
+    type: str
+...

@@ -1,0 +1,59 @@
+---
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+DOCUMENTATION:
+  name: satellite_configuration_append_export_search_to_api_link
+  short_description: Append search= to a Satellite API path from export filters
+  version_added: 1.4.0
+  description:
+    - Builds scoped_search via C(satellite_configuration_build_export_search_query) and appends it as a URL-encoded C(search=) query parameter.
+    - Returns the input path unchanged when no search query is produced.
+  positional: api_link
+  options:
+    api_link:
+      description: API path and query string (for example C(/katello/api/repositories?full_result=true)).
+      type: str
+      required: true
+    filters:
+      description: Export scope filters (typically C(satellite_configuration_filetree_create_filters)).
+      type: dict
+      default: {}
+    extra_search:
+      description: Existing scoped_search fragment merged with AND.
+      type: str
+      default: null
+    supports_organization:
+      description: When C(false), omit organization predicates (per-organization Katello URLs).
+      type: bool
+      default: true
+    supports_location:
+      description: When C(true), include C(locations) / C(locations_exclude) as C(location =) predicates.
+      type: bool
+      default: false
+    supports_domain:
+      description: When C(true), include C(domains) / C(domains_exclude) as C(domain =) predicates.
+      type: bool
+      default: false
+    supports_hostgroup_parents:
+      description: When C(true), include C(hostgroup_parents) as C(title) branch predicates.
+      type: bool
+      default: false
+  author:
+    - infra.satellite_configuration contributors
+
+EXAMPLES: |
+  - name: Repositories index with export scope
+    ansible.builtin.set_fact:
+      api_link: >-
+        {{
+          '/katello/api/repositories?full_result=true'
+          | infra.satellite_configuration.satellite_configuration_append_export_search_to_api_link(
+              satellite_configuration_filetree_create_filters
+            )
+        }}
+
+RETURN:
+  _value:
+    description: API path with optional C(search=) parameter.
+    type: str
+...

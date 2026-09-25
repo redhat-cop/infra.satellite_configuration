@@ -1,0 +1,37 @@
+---
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+DOCUMENTATION:
+  name: satellite_configuration_reject_orphaned_katello_products
+  short_description: Drop Katello repositories with orphaned nested product dicts
+  version_added: 1.4.0
+  description:
+    - Katello repository index responses may expose C(product) as a string or a dict.
+    - C(rejectattr('product.orphaned', ...)) fails when C(product) is a string; this filter
+      only drops items whose nested product mapping has C(orphaned) set.
+  positional: _input
+  options:
+    _input:
+      description: Katello repository index objects.
+      type: list
+      elements: dict
+      required: true
+  author:
+    - infra.satellite_configuration contributors
+
+EXAMPLES: |
+  - name: Prepare repository index results for export
+    ansible.builtin.set_fact:
+      export_list: >-
+        {{
+          result_api_response.json.results
+          | rejectattr('url', 'search', satellite_redhat_repository_url_substring)
+          | infra.satellite_configuration.satellite_configuration_reject_orphaned_katello_products
+        }}
+
+RETURN:
+  _value:
+    description: Repository list without orphaned-product entries.
+    type: list
+    elements: dict
+...

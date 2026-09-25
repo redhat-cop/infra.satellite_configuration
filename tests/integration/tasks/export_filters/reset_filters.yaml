@@ -1,0 +1,8 @@
+---
+# Inherits filter_<test> tags from the parent block (do not add always here).
+
+- name: Reset integration export filter working copy to baseline
+  ansible.builtin.set_fact:
+    __integration_export_filters: "{{ __integration_export_filters_baseline }}"
+
+...

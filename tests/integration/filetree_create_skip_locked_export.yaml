@@ -5,9 +5,9 @@
 # (or pass a full satellite dict with -e).
 # Optional: SATELLITE_VALIDATE_CERTS (default true), SATELLITE_CONFIGURATION_FILETREE_PATH.
 #
-# Example:
+# Run via tests/integration/run_integration_tests.sh skip_locked or:
 #   ansible-playbook tests/integration/filetree_create_skip_locked_export.yaml \
-#     --skip-tags yaml_format
+#     --tags always,skip_locked,provisioning_templates,partition_tables,job_templates,yaml_format
 - name: Integration test filetree_create skips locked factory objects at export
   hosts: localhost
   connection: local
@@ -31,7 +31,8 @@
     __integration_job_templates_export_path: >-
       {{ satellite_configuration_filetree_path }}/satellite_job_templates.d/satellite_job_templates.yaml
   tasks:
-    - name: Build Satellite connection from environment when satellite is not passed
+    - name: Build Satellite connection from environment when satellite is not defined
+      tags: [always]
       ansible.builtin.set_fact:
         satellite: >-
           {{
@@ -48,6 +49,7 @@
       when: satellite is not defined
 
     - name: Require Satellite connection variables
+      tags: [always]
       ansible.builtin.assert:
         that:
           - satellite.server_url | default('') | length > 0
@@ -58,47 +60,48 @@
           (or pass a full satellite dict with -e).
 
     - name: Ensure integration export directory exists
+      tags: [always]
       ansible.builtin.file:
         path: "{{ satellite_configuration_filetree_path }}"
         state: directory
         mode: "0755"
 
-    - name: Resolve Satellite connection for export
-      ansible.builtin.include_role:
+    - name: Load collection global defaults
+      ansible.builtin.import_role:
         name: infra.satellite_configuration.global_vars
-        tasks_from: resolve_satellite_source.yaml
 
-    - name: Export provisioning templates
-      ansible.builtin.include_role:
-        name: infra.satellite_configuration.filetree_create
-        tasks_from: get_provisioning_templates.yaml
+    - name: Resolve Satellite connection from satellite_source
+      tags: [always]
+      ansible.builtin.set_fact:
+        satellite: "{{ satellite_source }}"
+      when: satellite_source is defined
 
-    - name: Export partition tables
-      ansible.builtin.include_role:
+    - name: Export locked-template object types via full filetree_create role
+      ansible.builtin.import_role:
         name: infra.satellite_configuration.filetree_create
-        tasks_from: get_partition_tables.yaml
-
-    - name: Export job templates
-      ansible.builtin.include_role:
-        name: infra.satellite_configuration.filetree_create
-        tasks_from: get_job_templates.yaml
+      vars:
+        output_path: "{{ satellite_configuration_filetree_path }}"
 
     - name: Stat exported provisioning templates file
+      tags: [skip_locked]
       ansible.builtin.stat:
         path: "{{ __integration_provisioning_templates_export_path }}"
       register: __integration_provisioning_templates_export_stat
 
     - name: Stat exported partition tables file
+      tags: [skip_locked]
       ansible.builtin.stat:
         path: "{{ __integration_partition_tables_export_path }}"
       register: __integration_partition_tables_export_stat
 
     - name: Stat exported job templates file
+      tags: [skip_locked]
       ansible.builtin.stat:
         path: "{{ __integration_job_templates_export_path }}"
       register: __integration_job_templates_export_stat
 
     - name: Load exported provisioning templates
+      tags: [skip_locked]
       ansible.builtin.set_fact:
         __integration_exported_provisioning_template_names: >-
           {{
@@ -113,11 +116,13 @@
       when: __integration_provisioning_templates_export_stat.stat.exists | bool
 
     - name: Default exported provisioning template names when file is absent
+      tags: [skip_locked]
       ansible.builtin.set_fact:
         __integration_exported_provisioning_template_names: []
       when: not (__integration_provisioning_templates_export_stat.stat.exists | bool)
 
     - name: Load exported partition tables
+      tags: [skip_locked]
       ansible.builtin.set_fact:
         __integration_exported_partition_table_names: >-
           {{
@@ -132,11 +137,13 @@
       when: __integration_partition_tables_export_stat.stat.exists | bool
 
     - name: Default exported partition table names when file is absent
+      tags: [skip_locked]
       ansible.builtin.set_fact:
         __integration_exported_partition_table_names: []
       when: not (__integration_partition_tables_export_stat.stat.exists | bool)
 
     - name: Load exported job templates
+      tags: [skip_locked]
       ansible.builtin.set_fact:
         __integration_exported_job_template_names: >-
           {{
@@ -151,14 +158,26 @@
       when: __integration_job_templates_export_stat.stat.exists | bool
 
     - name: Default exported job template names when file is absent
+      tags: [skip_locked]
       ansible.builtin.set_fact:
         __integration_exported_job_template_names: []
       when: not (__integration_job_templates_export_stat.stat.exists | bool)
 
     - name: Query locked provisioning templates on Satellite
+      tags: [skip_locked]
       ansible.builtin.uri:
         method: GET
-        url: "{{ satellite.server_url }}/api/provisioning_templates?per_page=all"
+        url: >-
+          {{
+            satellite.server_url
+            ~ (
+                '/api/provisioning_templates?per_page=all'
+                | infra.satellite_configuration.satellite_configuration_append_locked_export_search_to_api_link(
+                    false,
+                    true
+                  )
+              )
+          }}
         user: "{{ satellite.admin.username }}"
         password: "{{ satellite.admin.password }}"
         validate_certs: "{{ satellite.validate_certs }}"
@@ -168,9 +187,20 @@
       register: __integration_locked_provisioning_templates_api
 
     - name: Query locked partition tables on Satellite
+      tags: [skip_locked]
       ansible.builtin.uri:
         method: GET
-        url: "{{ satellite.server_url }}/api/ptables?per_page=all"
+        url: >-
+          {{
+            satellite.server_url
+            ~ (
+                '/api/ptables?per_page=all'
+                | infra.satellite_configuration.satellite_configuration_append_locked_export_search_to_api_link(
+                    false,
+                    true
+                  )
+              )
+          }}
         user: "{{ satellite.admin.username }}"
         password: "{{ satellite.admin.password }}"
         validate_certs: "{{ satellite.validate_certs }}"
@@ -180,9 +210,20 @@
       register: __integration_locked_partition_tables_api
 
     - name: Query locked job templates on Satellite
+      tags: [skip_locked]
       ansible.builtin.uri:
         method: GET
-        url: "{{ satellite.server_url }}/api/job_templates?per_page=all"
+        url: >-
+          {{
+            satellite.server_url
+            ~ (
+                '/api/job_templates?per_page=all'
+                | infra.satellite_configuration.satellite_configuration_append_locked_export_search_to_api_link(
+                    false,
+                    true
+                  )
+              )
+          }}
         user: "{{ satellite.admin.username }}"
         password: "{{ satellite.admin.password }}"
         validate_certs: "{{ satellite.validate_certs }}"
@@ -192,13 +233,12 @@
       register: __integration_locked_job_templates_api
 
     - name: Build locked object name lists from Satellite API
+      tags: [skip_locked]
       ansible.builtin.set_fact:
         __integration_locked_provisioning_template_names: >-
           {{
             __integration_locked_provisioning_templates_api.json.results
             | default([])
-            | selectattr('locked', 'defined')
-            | selectattr('locked')
             | map(attribute='name')
             | list
           }}
@@ -206,8 +246,6 @@
           {{
             __integration_locked_partition_tables_api.json.results
             | default([])
-            | selectattr('locked', 'defined')
-            | selectattr('locked')
             | map(attribute='name')
             | list
           }}
@@ -215,23 +253,23 @@
           {{
             __integration_locked_job_templates_api.json.results
             | default([])
-            | selectattr('locked', 'defined')
-            | selectattr('locked')
             | map(attribute='name')
             | list
           }}
 
-    - name: Assert fresh Satellite exposes locked factory objects to filter
+    - name: Assert Satellite exposes locked templates for skip_locked integration test
+      tags: [skip_locked]
       ansible.builtin.assert:
         that:
           - __integration_locked_provisioning_template_names | length > 0
           - __integration_locked_partition_table_names | length > 0
         fail_msg: >-
-          Expected locked factory provisioning templates and partition tables on the
-          source Satellite; use a default Satellite install for this integration test.
+          Expected locked provisioning templates and partition tables on the source
+          Satellite (Foreman index APIs omit the locked attribute; use search=locked=true).
         quiet: true
 
     - name: Assert export omits every locked provisioning template
+      tags: [skip_locked]
       ansible.builtin.assert:
         that:
           - (__integration_exported_provisioning_template_names | intersect(__integration_locked_provisioning_template_names)) | length == 0
@@ -244,6 +282,7 @@
           }}
 
     - name: Assert export omits every locked partition table
+      tags: [skip_locked]
       ansible.builtin.assert:
         that:
           - (__integration_exported_partition_table_names | intersect(__integration_locked_partition_table_names)) | length == 0
@@ -256,6 +295,7 @@
           }}
 
     - name: Assert export omits every locked job template
+      tags: [skip_locked]
       ansible.builtin.assert:
         that:
           - (__integration_exported_job_template_names | intersect(__integration_locked_job_template_names)) | length == 0
@@ -268,17 +308,41 @@
           }}
 
     - name: Assert known factory defaults are absent from export
+      tags: [skip_locked]
       ansible.builtin.assert:
         that:
-          - item not in __integration_exported_provisioning_template_names
-        loop: "{{ __integration_factory_provisioning_template_names }}"
-      when: item in __integration_locked_provisioning_template_names
+          - >-
+            (
+              __integration_factory_provisioning_template_names
+              | intersect(__integration_locked_provisioning_template_names)
+              | intersect(__integration_exported_provisioning_template_names)
+            ) | length == 0
+        fail_msg: >-
+          Known locked factory provisioning templates were exported:
+          {{
+            __integration_factory_provisioning_template_names
+            | intersect(__integration_locked_provisioning_template_names)
+            | intersect(__integration_exported_provisioning_template_names)
+            | join(', ')
+          }}
 
     - name: Assert known factory partition tables are absent from export
+      tags: [skip_locked]
       ansible.builtin.assert:
         that:
-          - item not in __integration_exported_partition_table_names
-        loop: "{{ __integration_factory_partition_table_names }}"
-      when: item in __integration_locked_partition_table_names
+          - >-
+            (
+              __integration_factory_partition_table_names
+              | intersect(__integration_locked_partition_table_names)
+              | intersect(__integration_exported_partition_table_names)
+            ) | length == 0
+        fail_msg: >-
+          Known locked factory partition tables were exported:
+          {{
+            __integration_factory_partition_table_names
+            | intersect(__integration_locked_partition_table_names)
+            | intersect(__integration_exported_partition_table_names)
+            | join(', ')
+          }}
 
 ...

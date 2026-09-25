@@ -4,12 +4,6 @@
     result_api_response: {}
     __rs_info_list: []
 
-- name: Installation Mediums | Get Installation Mediums
-  ansible.builtin.include_tasks: api_call.yaml
-  vars:
-    call_type: Installation Mediums
-    api_link: "/api/media?per_page=all"
-
 - name: Installation Mediums | Resolve locked installation medium export skip flag
   ansible.builtin.set_fact:
     __filetree_create_effective_skip_locked_installation_mediums: >-
@@ -18,6 +12,13 @@
         if (filetree_create_include_locked_templates | default(false) | bool)
         else (filetree_create_skip_locked_installation_mediums | default(true) | bool)
       }}
+
+- name: Installation Mediums | Get Installation Mediums
+  ansible.builtin.include_tasks: api_call.yaml
+  vars:
+    call_type: Installation Mediums
+    # Foreman /api/media does not support scoped_search on locked (unlike templates/ptables).
+    api_link: "/api/media?per_page=all"
 
 - name: Installation Mediums | Filter locked installation media from export index
   ansible.builtin.include_tasks: filter_locked_export_index.yaml
