@@ -10,9 +10,26 @@
     call_type: Provisioning Templates
     api_link: "/api/provisioning_templates?per_page=all"
 
+- name: Provisioning Templates | Resolve locked-template export skip flag
+  ansible.builtin.set_fact:
+    __filetree_create_effective_skip_locked_provisioning_templates: >-
+      {{
+        false
+        if (filetree_create_include_locked_templates | default(false) | bool)
+        else (filetree_create_skip_locked_provisioning_templates | default(true) | bool)
+      }}
+
+- name: Provisioning Templates | Filter locked templates from export index
+  ansible.builtin.include_tasks: filter_locked_export_index.yaml
+  vars:
+    __filter_locked_source_list: "{{ result_api_response.json.results }}"
+    __filter_locked_skip: "{{ __filetree_create_effective_skip_locked_provisioning_templates }}"
+    __filter_locked_call_type: Provisioning Templates
+    __filter_locked_object_label: provisioning templates
+
 - name: Provisioning Templates | Retain the Provisioning Templates' info
   ansible.builtin.set_fact:
-    __provisioning_templates_list: "{{ result_api_response.json.results }}"
+    __provisioning_templates_list: "{{ __filter_locked_export_list }}"
 
 - name: Provisioning Templates | Get External Provisioning Templates Info
   ansible.builtin.include_tasks: get_provisioning_templates_do_work.yaml

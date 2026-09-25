@@ -25,6 +25,11 @@
       when: __provisioning_template_detail.operatingsystems | default([]) | length > 0
 
     - name: Provisioning Template (Do Work) | Set Info List (can take a while...)
+      when:
+        - not (
+            (__filetree_create_effective_skip_locked_provisioning_templates | default(true) | bool)
+            and (__provisioning_template_detail.locked | default(false) | bool)
+          )
       ansible.builtin.set_fact:
         __rs_info_list: >-
           {{

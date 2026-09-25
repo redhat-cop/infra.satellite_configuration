@@ -1,0 +1,13 @@
+---
+minor_changes:
+  - filetree_create - skip locked provisioning templates, partition tables, job templates,
+    and installation media at export by default (symmetric with dispatch import guards);
+    log omitted locked object counts with a name sample.
+  - filetree_create - add filetree_create_include_locked_templates to export factory
+    templates for full-site backup scenarios.
+  - filetree_create - add opt-in filetree_create_skip_satellite_host_operatingsystem to
+    omit the operating system used by the Satellite host itself.
+  - tests - add live-Satellite integration playbook
+    tests/integration/filetree_create_skip_locked_export.yaml.
+
+...
