@@ -338,7 +338,7 @@ jobs:
        (github.event_name == 'pull_request' &&
         (needs.approval-gate.outputs.approved == 'true' ||
          needs.manual-approval.result == 'success')))
-    uses: ansible/ansible-content-actions/.github/workflows/build_import.yaml@c105d6b8b887a36219224da17adc7518aab2401d # main
+    uses: ansible/ansible-content-actions/.github/workflows/build_import.yaml@cbdec1f72eeee38b7e60d0f2346c66e622eea02a # main
 
   markdown-link-check:
     needs: [approval-gate, manual-approval]
