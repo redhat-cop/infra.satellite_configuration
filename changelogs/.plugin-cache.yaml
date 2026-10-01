@@ -7,14 +7,59 @@ plugins:
   cliconf: {}
   connection: {}
   filter:
+    satellite_configuration_append_export_search_for_resource:
+      description: Append export scope search= using per-resource API defaults
+      name: satellite_configuration_append_export_search_for_resource
+      version_added: 1.4.0
+    satellite_configuration_append_export_search_to_api_link:
+      description: Append search= to a Satellite API path from export filters
+      name: satellite_configuration_append_export_search_to_api_link
+      version_added: 1.4.0
+    satellite_configuration_append_locked_export_search_to_api_link:
+      description: Append Foreman locked scope search to a template API path
+      name: satellite_configuration_append_locked_export_search_to_api_link
+      version_added: 1.4.0
+    satellite_configuration_build_export_search_query:
+      description: Build Foreman/Katello scoped_search from filetree_create export
+        filters
+      name: satellite_configuration_build_export_search_query
+      version_added: 1.4.0
     satellite_configuration_contains_template_markers:
       description: Detect ERB or Jinja template markers in a string
       name: satellite_configuration_contains_template_markers
       version_added: 1.2.0
+    satellite_configuration_export_item_is_locked:
+      description: Return whether a Foreman API object is locked
+      name: satellite_configuration_export_item_is_locked
+      version_added: 1.4.0
+    satellite_configuration_filter_export_items:
+      description: Filter export objects by organization scope and name patterns
+      name: satellite_configuration_filter_export_items
+      version_added: 1.4.0
+    satellite_configuration_filter_export_organizations:
+      description: Filter organizations for filetree_create export scope
+      name: satellite_configuration_filter_export_organizations
+      version_added: 1.4.0
+    satellite_configuration_filters_for_post_api_export:
+      description: Omit export filter dimensions already applied via API search
+      name: satellite_configuration_filters_for_post_api_export
+      version_added: 1.4.0
+    satellite_configuration_locked_item_names:
+      description: Return names of locked Foreman API objects
+      name: satellite_configuration_locked_item_names
+      version_added: 1.4.0
     satellite_configuration_merge_by_key:
       description: Merge CaC override list into a base list by key
       name: satellite_configuration_merge_by_key
       version_added: 1.2.0
+    satellite_configuration_reject_locked_items:
+      description: Drop locked Foreman API objects from a list
+      name: satellite_configuration_reject_locked_items
+      version_added: 1.4.0
+    satellite_configuration_reject_orphaned_katello_products:
+      description: Drop Katello repositories with orphaned nested product dicts
+      name: satellite_configuration_reject_orphaned_katello_products
+      version_added: 1.4.0
     satellite_configuration_sanitize_partition_table_layout:
       description: Prepare partition table layout for Satellite import
       name: satellite_configuration_sanitize_partition_table_layout
@@ -42,4 +87,4 @@ plugins:
   strategy: {}
   test: {}
   vars: {}
-version: 1.3.2
+version: 1.4.0

@@ -325,3 +325,106 @@ releases:
     fragments:
     - skip_ee_without_quay_token.yaml
     release_date: '2026-08-01'
+  1.4.0:
+    changes:
+      bugfixes:
+      - filetree_create - fetch host collections per organization and resolve organization
+        names in tasks instead of template-time API lookups, fixing export failures
+        on multi-org Satellite instances.
+      - filetree_create - fix content view filter export crash when a filter rule
+        has no ``name`` (for example erratum by date or by id); export ``date_type``,
+        ``start_date``, ``end_date``, ``types``, and ``errata_id`` for those rules
+        (https://github.com/redhat-cop/infra.satellite_configuration/issues/90).
+      minor_changes:
+      - filetree_create - add Tier 2 export scope filters ``locations``, ``domains``,
+        and ``hostgroup_parents`` with Foreman ``search=`` on host groups, domains,
+        subnets, and users.
+      - filetree_create - add Tier 3 Katello filters (``products``, ``lifecycle_environments``,
+        ``content_views``, ``labels``, ``repository_sets_only_enabled``) and Tier
+        4 identity/govern filters (``auth_sources``, ``users_admin``, ``settings_include``/``exclude``,
+        ``roles_include_builtin``/``locked``, ``search``/``search_by_type``).
+      - filetree_create - add ``satellite_configuration_append_export_search_for_resource``
+        and cache ``organization_info`` across Katello export tasks in a play.
+      - filetree_create - add ``satellite_configuration_append_locked_export_search_to_api_link``
+        because Foreman template/ptable/job-template index APIs omit the C(locked)
+        attribute; export uses C(search=locked=false) and integration tests discover
+        locked objects with C(search=locked=true). Installation media (C(/api/media))
+        do not support locked search.
+      - filetree_create - add ``satellite_configuration_build_export_search_query``
+        and ``satellite_configuration_append_export_search_to_api_link`` collection
+        filters.
+      - filetree_create - add ``satellite_configuration_filetree_create_filters``
+        for organization allow/deny lists and name glob or regex include/exclude patterns
+        on export.
+      - filetree_create - add ``satellite_configuration_filter_export_items`` and
+        ``satellite_configuration_filter_export_organizations`` collection filters.
+      - filetree_create - add ``satellite_configuration_filters_for_post_api_export``
+        so API index post-filters do not drop objects missing related-name fields
+        (for example subnet domains).
+      - filetree_create - add ``satellite_configuration_reject_orphaned_katello_products``
+        for repository index cleanup when ``product`` is a string or dict.
+      - filetree_create - add filetree_create_include_locked_templates to export factory
+        templates for full-site backup scenarios.
+      - filetree_create - add opt-in filetree_create_skip_satellite_host_operatingsystem
+        to omit the operating system used by the Satellite host itself.
+      - filetree_create - fix organization cache so skipped ``resolve_export_organizations``
+        lookups do not overwrite a prior successful ``organization_info`` result (Ansible
+        register-on-skip).
+      - filetree_create - fix repository and host group export templates to gate on
+        ``detailed_info.results`` length.
+      - filetree_create - push export scope filters to Katello ``search=`` on repositories,
+        content views, lifecycle environments, products, activation keys, host collections,
+        content credentials, and sync plans when translatable to scoped_search; client-side
+        post-filter remains as a safety net.
+      - filetree_create - skip locked provisioning templates, partition tables, job
+        templates, and installation media at export by default (symmetric with dispatch
+        import guards); log omitted locked object counts with a name sample.
+      - filetree_create - use API index export for settings (replacing ``setting_info``)
+        when settings scope filters or ``search=`` apply.
+      - filetree_reconcile - apply ``satellite_configuration_filetree_reconcile_filters``
+        to both live and CaC objects during compare (default mirrors ``satellite_configuration_filetree_create_filters``).
+      - filetree_reconcile_diff - add ``scope_filters`` and ``roles_name_excludes``
+        parameters; reuse export scope logic via ``filter_reconcile_scope_objects``.
+      - tests - add live-Satellite integration playbook tests/integration/filetree_create_skip_locked_export.yaml.
+    fragments:
+    - filetree_create_export_filters.yaml
+    - filetree_create_host_collections_export.yaml
+    - filetree_create_skip_locked_export.yaml
+    - issue_90_erratum_cv_filter_export.yaml
+    plugins:
+      filter:
+      - description: Append export scope search= using per\-resource API defaults
+        name: satellite_configuration_append_export_search_for_resource
+        namespace: null
+      - description: Append search= to a Satellite API path from export filters
+        name: satellite_configuration_append_export_search_to_api_link
+        namespace: null
+      - description: Append Foreman locked scope search to a template API path
+        name: satellite_configuration_append_locked_export_search_to_api_link
+        namespace: null
+      - description: Build Foreman/Katello scoped\_search from filetree\_create export
+          filters
+        name: satellite_configuration_build_export_search_query
+        namespace: null
+      - description: Return whether a Foreman API object is locked
+        name: satellite_configuration_export_item_is_locked
+        namespace: null
+      - description: Filter export objects by organization scope and name patterns
+        name: satellite_configuration_filter_export_items
+        namespace: null
+      - description: Filter organizations for filetree\_create export scope
+        name: satellite_configuration_filter_export_organizations
+        namespace: null
+      - description: Omit export filter dimensions already applied via API search
+        name: satellite_configuration_filters_for_post_api_export
+        namespace: null
+      - description: Return names of locked Foreman API objects
+        name: satellite_configuration_locked_item_names
+        namespace: null
+      - description: Drop locked Foreman API objects from a list
+        name: satellite_configuration_reject_locked_items
+        namespace: null
+      - description: Drop Katello repositories with orphaned nested product dicts
+        name: satellite_configuration_reject_orphaned_katello_products
+        namespace: null
+    release_date: '2026-10-01'
