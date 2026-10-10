@@ -61,7 +61,7 @@ repos:
         pass_filenames: false
         always_run: true
   - repo: https://github.com/ambv/black
-    rev: 26.10.0
+    rev: 26.10.1
     hooks:
       - id: black
         name: black
