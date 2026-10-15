@@ -1,0 +1,9 @@
+---
+bugfixes:
+  - >-
+    filetree_create - quote YAML-significant scalars from ``clean_fields.j2`` using
+    Jinja ``is string`` so ansible-core 2.16 ``AnsibleUnsafeText`` values with
+    colons (for example content view version descriptions like
+    ``Auto-publish: 2026-10-04 21:00:29``) no longer break ``format_yaml``
+    (https://github.com/redhat-cop/infra.satellite_configuration/issues/99).
+...
