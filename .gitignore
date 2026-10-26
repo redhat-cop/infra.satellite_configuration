@@ -22,3 +22,4 @@ tests/output
 *.pem
 *.key
 credentials.json
+mcp.json

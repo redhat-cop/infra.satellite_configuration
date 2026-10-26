@@ -18,7 +18,8 @@
 {%-     endfor -%}
 ]
 {%-   else -%}
-{%-     if __input | type_debug == 'str' and (',' in __input or ':' in __input or '\n' in __input or '\r' in __input) -%}
+{#- "is string" covers AnsibleUnsafeText/AnsibleUnicode (type_debug != 'str' on ansible-core 2.16). -#}
+{%-     if __input is string and (',' in __input or ':' in __input or '\n' in __input or '\r' in __input) -%}
 '{{ __input | replace('\r\n', '\n') | replace('\n', '\n\n') | replace('\n\n', '\n') | replace("'", "''") | regex_replace('\s*\n', '\n') }}'
 {%-     else -%}
 {{ __input | regex_replace('\s*\n', '\n') }}
