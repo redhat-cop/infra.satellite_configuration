@@ -428,3 +428,13 @@ releases:
         name: satellite_configuration_reject_orphaned_katello_products
         namespace: null
     release_date: '2026-10-01'
+  1.4.1:
+    changes:
+      bugfixes:
+      - 'filetree_create - quote YAML-significant scalars from ``clean_fields.j2``
+        using Jinja ``is string`` so ansible-core 2.16 ``AnsibleUnsafeText`` values
+        with colons (for example content view version descriptions like ``Auto-publish:
+        2026-10-04 21:00:29``) no longer break ``format_yaml`` (https://github.com/redhat-cop/infra.satellite_configuration/issues/99).'
+    fragments:
+    - issue_99_colon_description_quoting.yaml
+    release_date: '2026-11-01'
