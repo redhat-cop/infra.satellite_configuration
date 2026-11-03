@@ -21,8 +21,6 @@ profile: production
 # verbosity: 1
 skip_list:
   - fqcn[keyword]
-  - meta-runtime # requires_ansible in meta/runtime.yml vs galaxy.yml dependencies
-  - sanity[cannot-ignore] # We're only ignoring sanity rules when we have to
   # Playbooks use group/redhat.satellite.satellite module_defaults; Galaxy Importer
   # lint runs without that collection installed, so syntax-check cannot resolve the group.
   - internal-error
