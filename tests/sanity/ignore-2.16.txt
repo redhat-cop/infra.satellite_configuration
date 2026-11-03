@@ -1,0 +1,6 @@
+plugins/module_utils/reconcile_utils.py compile-2.7!skip  # controller Python 3 only
+plugins/module_utils/reconcile_utils.py import-2.7!skip  # controller Python 3 only
+plugins/modules/filetree_reconcile_diff.py compile-2.7!skip  # controller Python 3 only
+plugins/modules/filetree_reconcile_diff.py import-2.7!skip  # controller Python 3 only
+plugins/modules/format_yaml.py compile-2.7!skip  # controller Python 3 only
+plugins/modules/format_yaml.py import-2.7!skip  # controller Python 3 only
