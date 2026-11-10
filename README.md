@@ -52,7 +52,7 @@ The following are also requirements:
 
 ## Installing this collection
 
-You can install the `infra.satellite_configuration` collection with the Ansible Galaxy CLI (the dependency -redhat.satellite- will be installed automatically when possible):
+Red Hat customers should install the certified collection from [Red Hat Ansible Automation Hub](https://console.redhat.com/ansible/automation-hub). Configure `ansible-galaxy` to use Automation Hub as a Galaxy server, then install with the CLI (the dependency `redhat.satellite` will be installed automatically when possible):
 
 ```console
 ansible-galaxy collection install infra.satellite_configuration
@@ -141,7 +141,7 @@ satellite_settings:
     value: "admin@prod.example.com"
 ```
 
-The [`configs/`](configs/) directory in this repository is an example **greenfield** tree: hand-authored desired state using the same `.d/` layout, without exporting from an existing Satellite.
+The [`configs/`](https://github.com/redhat-cop/infra.satellite_configuration/blob/devel/configs/) directory in this repository is an example **greenfield** tree: hand-authored desired state using the same `.d/` layout, without exporting from an existing Satellite.
 
 ### Subscription manifest
 
@@ -172,9 +172,9 @@ Set `satellite_configuration_dispatch_manifest_validate: false` only when conten
 
 ### Supported object types
 
-The three roles (`filetree_create`, `filetree_read`, `dispatch`) cover the object types listed in [`filetree_read` defaults](roles/filetree_read/defaults/main.yml).
+The three roles (`filetree_create`, `filetree_read`, `dispatch`) cover the object types listed in [`filetree_read` defaults](https://github.com/redhat-cop/infra.satellite_configuration/blob/devel/roles/filetree_read/defaults/main.yml).
 
-The following Satellite objects are **not yet** covered end-to-end (Issue #11); extend the collection using the skills under [`skills/`](skills/README.md) when needed:
+The following Satellite objects are **not yet** covered end-to-end (Issue #11); extend the collection using the skills under [`skills/`](https://github.com/redhat-cop/infra.satellite_configuration/blob/devel/skills/README.md) when needed:
 
 - Compute resources and compute profiles
 - Global parameters
