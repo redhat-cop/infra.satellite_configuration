@@ -4,6 +4,20 @@ infra.satellite\_configuration Release Notes
 
 .. contents:: Topics
 
+v1.5.0
+======
+
+Minor Changes
+-------------
+
+- Exclude developer-only tooling from the collection build artifact via ``galaxy.yml`` ``build_ignore`` (skills, TODO, lint/pre-commit configs).
+- Update README installation guidance for Red Hat Ansible Automation Hub and convert remaining relative links to absolute GitHub URLs for Automation Hub rendering.
+
+Bugfixes
+--------
+
+- Remove ``meta-runtime`` and ``sanity[cannot-ignore]`` from the ansible-lint ``skip_list`` so required certification checks remain enforced.
+
 v1.4.1
 ======
 
